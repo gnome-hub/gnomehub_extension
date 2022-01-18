@@ -1,0 +1,8 @@
+{
+  "name": "gnomehub",
+  "description": "Display a panel on the notification bar giving controls and information",
+  "uuid": "gnomehub@gnome-hub.github.io",
+  "shell-version": [
+    "3.36"
+  ]
+}
