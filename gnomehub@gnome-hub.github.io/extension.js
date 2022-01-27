@@ -2,12 +2,14 @@ const { GObject, St, Clutter, GLib, Gio } = imports.gi;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
+
 const Main = imports.ui.main;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 
+
 const Dropdown = GObject.registerClass(
-    class Indicator extends PanelMenu.Button {
+    class Dropdown extends PanelMenu.Button {
         _init() {
             super._init(0.0, 'gnome-hub');
             log("gnomehub: in indicator")
@@ -50,34 +52,12 @@ class Extension {
         this._uui = uuid
         log("gnomehub: In constructor")
     }
+
     enable() {
         this._indicator = new Dropdown();
         log("gnomehub: In enable")
         Main.panel.addToStatusArea(this._uuid, this._indicator, 0, 'right');
     }
-
-/*
-    enable() {
-        log(`enabling ${Me.metadata.name}`);
-
-        let indicatorName = `${Me.metadata.name} Indicator`;
-        
-        // Create a panel button
-        //this._indicator = new PanelMenu.Button(0.0, indicatorName, false);
-        this._indicator = new Dropdown();
-        
-        // Add an icon
-        let icon = new St.Icon({
-            gicon: new Gio.ThemedIcon({name: 'face-laugh-symbolic'}),
-            style_class: 'system-status-icon'
-        });
-        this._indicator.add_child(icon);
-
-        // `Main.panel` is the actual panel you see at the top of the screen,
-        // not a class constructor.
-        Main.panel.addToStatusArea(indicatorName, this._indicator);
-    }
-*/
     
     // REMINDER: It's required for extensions to clean up after themselves when
     // they are disabled. This is required for approval during review!
