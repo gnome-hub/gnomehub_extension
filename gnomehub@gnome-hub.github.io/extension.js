@@ -17,22 +17,31 @@ const Dropdown = GObject.registerClass(
             // can choose between icon or label
             this._label = new St.Label({
                 'y_align' : Clutter.ActorAlign.CENTER,
-                'text': 'gnomehub_placeholder',
+                'text': 'Hub',
                 'style_class': 'label'
             });
 
             this.add_child(this._label);
-
-            // Add an icon 
-            /*
-            this._icon = new St.Icon({
-                gicon: new Gio.ThemedIcon({name: 'face-laugh-symbolic'}),
-                style_class: 'system-status-icon'
-            });
-            this.add_child(this._icon);
-            */
-
-            // do for each item we want in the menu
+            
+            //notifications section 
+            // call a function which returns a list of notifications with title and app name (that will replace list currently here)
+            var notifications = ['Test1','Test2','Test3']
+            for(var i = 0;i < notifications.length;i++){
+                let notifMenuItem = new PopupMenu.PopupMenuItem(notifications[i]);
+                this.menu.addMenuItem(notifMenuItem);
+            }
+            //let source = Main.messageTray.getSources()
+            //let applicationIndex = this.appBlackList.indexOf(source[source.length-1].title);
+            //log(applicationIndex);
+            
+            // add divider between sections
+            this.menu.addMenuItem( new PopupMenu.PopupSeparatorMenuItem());
+            
+            // widgets section
+            var widgetSection = new PopupMenu.PopupMenuItem('Widget');
+            this.menu.addMenuItem(widgetSection);
+            this.menu.addMenuItem( new PopupMenu.PopupSeparatorMenuItem());
+            // settings section
             let settingsMenuItem = new PopupMenu.PopupMenuItem('Settings');
             settingsMenuItem.connect('activate', () => {
                 ExtensionUtils.openPrefs();
