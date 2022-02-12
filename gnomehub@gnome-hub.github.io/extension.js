@@ -1,114 +1,72 @@
-const { GObject, St, Clutter, GLib, Gio } = imports.gi;
 
-const ExtensionUtils = imports.misc.extensionUtils;
-const Me = ExtensionUtils.getCurrentExtension();
-
+const St = imports.gi.St;
+const Gio = imports.gi.Gio;
+const GLib = imports.gi.GLib;
 const Main = imports.ui.main;
-const PanelMenu = imports.ui.panelMenu;
-const PopupMenu = imports.ui.popupMenu;
+const Tweener = imports.ui.tweener;
+const MessageTray = imports.ui.messageTray;
 
+let text, button;
+let originalCountUpdated, originalDestroy;
 
-const Dropdown = GObject.registerClass(
-    class Dropdown extends PanelMenu.Button {
-        _init() {
-            super._init(0.0, 'gnome-hub');
-            log("gnomehub: in indicator")
+function updateMessageFile() {
+       let sources = Main.messageTray.getSources();
+       log("XDG_RUNTIME_DIR")
+       let fname = GLib.getenv("XDG_RUNTIME_DIR") + "/notifications";
+       log(fname)
+       let file = Gio.file_new_for_path(fname);
+       let fstream = file.replace(null, false, Gio.FileCreateFlags.NONE, null);
 
-            // can choose between icon or label
-            this._label = new St.Label({
-                'y_align' : Clutter.ActorAlign.CENTER,
-                'text': 'Hub',
-                'style_class': 'label'
-            });
+       for (let i = 0; i < sources.length; i++) {
+               for (let n = 0; n < sources[i].notifications.length; n++) {
+                        let notif = sources[i].notifications[n];
+                        let urg = "" + notif.urgency;
+                        if (notif.urgency == 0) {
+                            urg = "L"
+                        } else if (notif.urgency == 1) {
+                            urg = "N"
+                        } else if (notif.urgency == 3) {
+                            urg = "C"
+                        }
+                           let data = urg + " " + notif.title + " — " + notif.bannerBodyText;
+                           data = data.replace("\\", "\\\\").replace("\n", "\\n") + "\n"
+                           fstream.write(data, null, data.length);
+                       }
+              }
 
-            this.add_child(this._label);
-            
-            //notifications section 
-            // call a function which returns a list of notifications with title and app name (that will replace list currently here)
-            var notifications = ['Test1','Test2','Test3']
-            for(var i = 0;i < notifications.length;i++){
-                let notifMenuItem = new PopupMenu.PopupMenuItem(notifications[i]);
-                this.menu.addMenuItem(notifMenuItem);
-            }
-            //let source = Main.messageTray.getSources()
-            //let applicationIndex = this.appBlackList.indexOf(source[source.length-1].title);
-            //log(applicationIndex);
-            
-            // add divider between sections
-            this.menu.addMenuItem( new PopupMenu.PopupSeparatorMenuItem());
-            
-            // widgets section
-            var widgetSection = new PopupMenu.PopupMenuItem('Widget');
-            this.menu.addMenuItem(widgetSection);
-            this.menu.addMenuItem( new PopupMenu.PopupSeparatorMenuItem());
-            // settings section
-            let settingsMenuItem = new PopupMenu.PopupMenuItem('Settings');
-            settingsMenuItem.connect('activate', () => {
-                ExtensionUtils.openPrefs();
-            });
-            this.menu.addMenuItem(settingsMenuItem); 
-        }
+       fstream.close(null);
+}
 
-        setText(text) {
-            return this._label.set_text(text);
-        }
-    }
-)
+function _countUpdated() {
+       let res = originalCountUpdated.call(this);
 
-class Extension {
-    constructor(uuid) {
-        this._indicator = null;
-        this._uui = uuid
-        log("gnomehub: In constructor")
-    }
+       updateMessageFile();
+       return res;
+}
 
-    enable() {
-        this._indicator = new Dropdown();
-        log("gnomehub: In enable")
-        Main.panel.addToStatusArea(this._uuid, this._indicator, 0, 'right');
-    }
-    
-    // REMINDER: It's required for extensions to clean up after themselves when
-    // they are disabled. This is required for approval during review!
-    disable() {
-        log(`disabling ${Me.metadata.name}`);
+function _destroy() {
+       let res = originalDestroy.call(this);
 
-        this._indicator.destroy();
-        this._indicator = null;
-    }
+       updateMessageFile();
+       return res;
 }
 
 function init() {
-    log(`initializing ${Me.metadata.name}`);
-    
-    return new Extension();
 }
 
+function enable() {
+       originalCountUpdated = MessageTray.Source.prototype.countUpdated;
+       originalDestroy = MessageTray.Source.prototype.destroy;
 
-/*
-const {St, Clutter} = imports.gi;
-const Main = imports.ui.main;
+       MessageTray.Source.prototype.countUpdated = _countUpdated;
+       MessageTray.Source.prototype.destroy = _destroy;
 
-let panelButton;
-
-function init () {
-    panelButton = new St.Bin({
-        style_class : "panel-button",
-    });
-
-    let panelButtonText = new St.label({
-        text : "Hello World",
-        y_align: Clutter.ActorAlign.CENTER,
-    });
-
-    panelButton.set_child(panelButtonText);
+       Main.panel._rightBox.insert_child_at_index(button, 0);
 }
 
-function enable () {
-    Main.panel._rightBox.insert_child_at_index(panelButton, 0);
-}
+function disable() {
+       MessageTray.Source.prototype.countUpdated = originalCountUpdated;
+       MessageTray.Source.prototype.destroy = originalDestroy;
 
-function disable () {
-    Main.panel._rightBox.remove_child(panelButton);
+       Main.panel._rightBox.remove_child(button);
 }
-*/
