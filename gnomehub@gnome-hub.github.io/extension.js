@@ -39,7 +39,8 @@ const Dropdown = GObject.registerClass(
             
             //notifications section 
             // call a function which returns a list of notifications with title and app name (that will replace list currently here)
-            var notifications = ['Test1','Test2','Test3']
+            var notifications = _getNotifications()
+            // var notifications = ['Test1','Test2','Test3']
             for(var i = 0;i < notifications.length;i++){
                 let notifMenuItem = new PopupMenu.PopupMenuItem(notifications[i]);
                 this.menu.addMenuItem(notifMenuItem);
@@ -70,10 +71,9 @@ const Dropdown = GObject.registerClass(
 
 function updateMessageFile() {
        let sources = Main.messageTray.getSources();
-       log("XDG_RUNTIME_DIR") // use xdg/gnomehub
-                              // store data in a json format - easier once we add cpu and memory metrics
+       log("XDG_RUNTIME_DIR") // TODO: use xdg/gnomehub
+                              // TODO: store data in a json format - easier once we add cpu and memory metrics
        let fname = GLib.getenv("XDG_RUNTIME_DIR") + "/notifications";
-       log(fname)
        let file = Gio.file_new_for_path(fname);
        let fstream = file.append_to(Gio.FileCreateFlags.NONE, null);
        //let fstream = file.replace(null, false, Gio.FileCreateFlags.NONE, null);
@@ -94,13 +94,25 @@ function updateMessageFile() {
                         }
                            let data = urg + " " + notif.title + " — " + notif.bannerBodyText;
                            data = data.replace("\\", "\\\\").replace("\n", "\\n") + "\n"
-                           fstream.write(data, null, data.length);
+                           fstream.write(data, null, data.length); // TODO: figure out which argument is unnecessary- there is a warning that there are too many arguments to this method
                        }
               }
-
        fstream.close(null);
-        
+}
 
+function _getNotifications() {
+    // update notifications TODO: only read the lines necessary to display instead of the whole file
+    let fname = GLib.getenv("XDG_RUNTIME_DIR") + "/notifications";
+    let file = Gio.file_new_for_path(fname);
+    try {
+        const [, contents, etag] = file.load_contents(null);
+        // log(contents.toString());
+        // GLib.free(contents);
+    } catch (e) {
+        log(e)
+    }
+
+    return [] // TODO: Make this actually return the notifications
 }
 
 function _countUpdated() {
@@ -133,6 +145,7 @@ function init() {
     } catch (e) {
         log("no log file already stored")
     }
+    file.create(Gio.FileCreateFlags.NONE, null);
     
 }
 
