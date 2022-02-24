@@ -70,7 +70,8 @@ const Dropdown = GObject.registerClass(
 
 function updateMessageFile() {
        let sources = Main.messageTray.getSources();
-       log("XDG_RUNTIME_DIR")
+       log("XDG_RUNTIME_DIR") // use xdg/gnomehub
+                              // store data in a json format - easier once we add cpu and memory metrics
        let fname = GLib.getenv("XDG_RUNTIME_DIR") + "/notifications";
        log(fname)
        let file = Gio.file_new_for_path(fname);
@@ -127,8 +128,12 @@ function init() {
     let fname = GLib.getenv("XDG_RUNTIME_DIR") + "/notifications";
     let file = Gio.file_new_for_path(fname);
    
-    file.delete(null); //TODO: check if there is a file- if not no need to delete
-   
+    try {
+        file.delete(null); //TODO: check if there is a file- if not no need to delete
+    } catch (e) {
+        log("no log file already stored")
+    }
+    
 }
 
 function enable() {
