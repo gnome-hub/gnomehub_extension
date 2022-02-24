@@ -127,8 +127,7 @@ function init() {
     let fname = GLib.getenv("XDG_RUNTIME_DIR") + "/notifications";
     let file = Gio.file_new_for_path(fname);
    
-    file.delete(null); //TODO: check if there is a file- if not no need to delete
-   
+    if(file.exists()) file.delete(null);
 }
 
 function enable() {
