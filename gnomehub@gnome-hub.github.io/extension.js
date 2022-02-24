@@ -8,6 +8,8 @@ const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 const MessageTray = imports.ui.messageTray;
 
+const ByteArray = imports.byteArray;
+
 
 //const St = imports.gi.St;
 //const Gio = imports.gi.Gio;
@@ -104,15 +106,32 @@ function _getNotifications() {
     // update notifications TODO: only read the lines necessary to display instead of the whole file
     let fname = GLib.getenv("XDG_RUNTIME_DIR") + "/notifications";
     let file = Gio.file_new_for_path(fname);
-    try {
-        const [, contents, etag] = file.load_contents(null);
-        // log(contents.toString());
-        // GLib.free(contents);
-    } catch (e) {
-        log(e)
+    // try {
+    //     const [, contents, etag] = file.load_contents(null);
+    //     // log(contents.toString());
+    //     log("GNOMEHUB: HERE")
+    //     log(ByteArray.toString(contents))
+    //     GLib.free(contents);
+    // } catch (e) {
+    //     log(e)
+    // }
+
+    const fileInputStream = file.read(null);
+    const dataInputStream = new Gio.DataInputStream({
+        'base_stream' : fileInputStream
+    });
+
+    while (([line, length] = dataInputStream.read_line(null)) && line != null) {
+        if (line instanceof Uint8Array) {
+            line = ByteArray.toString(line).trim();
+        }
+        else {
+            line = line.toString().trim();
+        }
+        log(line) // TODO: append line to an array and return that array
     }
 
-    return [] // TODO: Make this actually return the notifications
+    return []
 }
 
 function _countUpdated() {
