@@ -68,6 +68,12 @@ const Dropdown = GObject.registerClass(
         setText(text) {
             return this._label.set_text(text);
         }
+
+
+
+
+
+
     }
 )
 
@@ -106,15 +112,7 @@ function _getNotifications() {
     // update notifications TODO: only read the lines necessary to display instead of the whole file
     let fname = GLib.getenv("XDG_RUNTIME_DIR") + "/notifications";
     let file = Gio.file_new_for_path(fname);
-    // try {
-    //     const [, contents, etag] = file.load_contents(null);
-    //     // log(contents.toString());
-    //     log("GNOMEHUB: HERE")
-    //     log(ByteArray.toString(contents))
-    //     GLib.free(contents);
-    // } catch (e) {
-    //     log(e)
-    // }
+    let notifs = [];
 
     const fileInputStream = file.read(null);
     const dataInputStream = new Gio.DataInputStream({
@@ -128,21 +126,24 @@ function _getNotifications() {
         else {
             line = line.toString().trim();
         }
-        log(line) // TODO: append line to an array and return that array
+        notifs.push(line)
     }
 
-    return []
+    return notifs
 }
 
 function _countUpdated() {
        let res = originalCountUpdated.call(this);
-       if(iteration%2 == 0) updateMessageFile();
+    if(iteration%2 == 0) {
+        updateMessageFile();
+        _getNotifications();
+    } 
        iteration = iteration + 1;
        return res;
 }
 
 function _destroy() {
-       //let res = originalDestroy.call(this);
+       let res = originalDestroy.call(this);
 
        //updateMessageFile();
        return res;
@@ -175,9 +176,11 @@ function enable() {
 
 
        originalCountUpdated = MessageTray.Source.prototype.countUpdated;
+       originalGetNotifications = MessageTray.Source.prototype.getNotifications;
        originalDestroy = MessageTray.Source.prototype.destroy;
 
        MessageTray.Source.prototype.countUpdated = _countUpdated;
+       MessageTray.Source.prototype.getNotifications = _getNotifications;
        MessageTray.Source.prototype.destroy = _destroy;
 
        Main.panel._rightBox.insert_child_at_index(button, 0);
@@ -193,6 +196,7 @@ function disable() {
 
 
        MessageTray.Source.prototype.countUpdated = originalCountUpdated;
+       MessageTray.Source.prototype.getNotifications = originalGetNotifications;
        MessageTray.Source.prototype.destroy = originalDestroy;
 
        Main.panel._rightBox.remove_child(button);
