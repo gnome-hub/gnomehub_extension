@@ -1,4 +1,4 @@
-const { GObject, St, Clutter, GLib, Gio } = imports.gi;
+const { GObject, St, Clutter, GLib, Gio, Soup } = imports.gi;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
@@ -53,6 +53,7 @@ const Dropdown = GObject.registerClass(
             // add divider between sections
             this.menu.addMenuItem( new PopupMenu.PopupSeparatorMenuItem());
             
+            _getWeather();
             // widgets section
             var widgetSection = new PopupMenu.PopupMenuItem('Widget');
             this.menu.addMenuItem(widgetSection);
@@ -132,6 +133,46 @@ function _getNotifications() {
     }
 
     return []
+}
+
+function _getWeather() {
+    let forecast = {};
+    // await _getWeatherUri().then(uri => {
+    //     let sessionSync = new Soup.SessionSync();
+    //     let msg = Soup.Message.new('GET', uri);
+    //     msg.request_headers.append("User-Agent", "Stackoverflow/1.0");
+    //     sessionSync.send_message(msg);
+    //     let response = JSON.parse(msg.response_body.data);
+    //     forecast = {
+    //         "name": response["properties"]["periods"][0]["name"],
+    //         "temperature": response["properties"]["periods"][0]["temperature"],
+    //         "detailedForecast": response["properties"]["periods"][0]["detailedForecast"],
+    //     };
+    // });
+
+    let sessionSync = new Soup.SessionSync();
+    let msg = Soup.Message.new('GET', 'https://api.weather.gov/gridpoints/IWX/29,63/forecast');
+    msg.request_headers.append("User-Agent", "Stackoverflow/1.0");
+    sessionSync.send_message(msg);
+    let response = JSON.parse(msg.response_body.data);
+    forecast = {
+        "name": response["properties"]["periods"][0]["name"],
+        "temperature": response["properties"]["periods"][0]["temperature"],
+        "detailedForecast": response["properties"]["periods"][0]["detailedForecast"],
+    };
+    log("forecast:", JSON.stringify(forecast));
+    return(forecast);
+}
+
+function _getWeatherUri(){
+    let sessionSync = new Soup.SessionSync();
+    let msg = Soup.Message.new('GET', 'https://api.weather.gov/points/41.7003,-86.2386');
+    msg.request_headers.append("User-Agent", "Stackoverflow/1.0");
+    sessionSync.send_message(msg);
+    let response = JSON.parse(msg.response_body.data);
+    let uri = JSON.stringify(response["properties"]["forecast"])
+    log("uri:", uri);
+    return(uri);
 }
 
 function _countUpdated() {
