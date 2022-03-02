@@ -21,7 +21,7 @@ const Tweener = imports.ui.tweener;
 let text, button;
 let originalCountUpdated, originalDestroy;
 let iteration = 0;
-
+let returnedForecast;
 let indicator, uuid;
 
 const Dropdown = GObject.registerClass(
@@ -52,12 +52,18 @@ const Dropdown = GObject.registerClass(
             
             // add divider between sections
             this.menu.addMenuItem( new PopupMenu.PopupSeparatorMenuItem());
+          
+	    var weatherWidget = new PopupMenu.PopupSubMenuMenuItem('Weather');
+            for(var weatherIndex = 0; weatherIndex < 5; weatherIndex++){
+	    	returnedForecast = _getWeather(weatherIndex);
+	    	var weatherText = new PopupMenu.PopupMenuItem('Forecast for ' + returnedForecast['name'] + ' in South Bend, IN:\n' + returnedForecast['detailedForecast']);
+	    	weatherWidget.menu.addMenuItem(weatherText);
+	    }
+	    this.menu.addMenuItem(weatherWidget);
             
-            _getWeather();
-            // widgets section
-            var widgetSection = new PopupMenu.PopupMenuItem('Widget');
-            this.menu.addMenuItem(widgetSection);
+	    // add divider between sections
             this.menu.addMenuItem( new PopupMenu.PopupSeparatorMenuItem());
+	    
             // settings section
             let settingsMenuItem = new PopupMenu.PopupMenuItem('Settings');
             settingsMenuItem.connect('activate', () => {
@@ -135,7 +141,7 @@ function _getNotifications() {
     return []
 }
 
-function _getWeather() {
+function _getWeather(num) {
     let forecast = {};
     // await _getWeatherUri().then(uri => {
     //     let sessionSync = new Soup.SessionSync();
@@ -156,9 +162,9 @@ function _getWeather() {
     sessionSync.send_message(msg);
     let response = JSON.parse(msg.response_body.data);
     forecast = {
-        "name": response["properties"]["periods"][0]["name"],
-        "temperature": response["properties"]["periods"][0]["temperature"],
-        "detailedForecast": response["properties"]["periods"][0]["detailedForecast"],
+        "name": response["properties"]["periods"][num]["name"],
+        "temperature": response["properties"]["periods"][num]["temperature"],
+        "detailedForecast": response["properties"]["periods"][num]["detailedForecast"],
     };
     log("forecast:", JSON.stringify(forecast));
     return(forecast);
