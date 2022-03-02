@@ -54,9 +54,9 @@ const Dropdown = GObject.registerClass(
             this.menu.addMenuItem( new PopupMenu.PopupSeparatorMenuItem());
           
 	    var weatherWidget = new PopupMenu.PopupSubMenuMenuItem('Weather');
-            for(var weatherIndex = 0; weatherIndex < 5; weatherIndex++){
-	    	returnedForecast = _getWeather(weatherIndex);
-	    	var weatherText = new PopupMenu.PopupMenuItem('Forecast for ' + returnedForecast['name'] + ' in South Bend, IN:\n' + returnedForecast['detailedForecast']);
+        returnedForecast = _getWeather();
+        for(var weatherIndex = 0; weatherIndex < 5; weatherIndex++){
+	    	var weatherText = new PopupMenu.PopupMenuItem('Forecast for ' + returnedForecast[weatherIndex]['name'] + ' in South Bend, IN:\n' + returnedForecast[weatherIndex]['detailedForecast']);
 	    	weatherWidget.menu.addMenuItem(weatherText);
 	    }
 	    this.menu.addMenuItem(weatherWidget);
@@ -141,8 +141,8 @@ function _getNotifications() {
     return []
 }
 
-function _getWeather(num) {
-    let forecast = {};
+function _getWeather() {
+    let forecast = [];
     // await _getWeatherUri().then(uri => {
     //     let sessionSync = new Soup.SessionSync();
     //     let msg = Soup.Message.new('GET', uri);
@@ -161,11 +161,13 @@ function _getWeather(num) {
     msg.request_headers.append("User-Agent", "Stackoverflow/1.0");
     sessionSync.send_message(msg);
     let response = JSON.parse(msg.response_body.data);
-    forecast = {
-        "name": response["properties"]["periods"][num]["name"],
-        "temperature": response["properties"]["periods"][num]["temperature"],
-        "detailedForecast": response["properties"]["periods"][num]["detailedForecast"],
-    };
+    for(var index = 0; index < 5; index++){
+        forecast.push({
+            "name": response["properties"]["periods"][index]["name"],
+            "temperature": response["properties"]["periods"][index]["temperature"],
+            "detailedForecast": response["properties"]["periods"][index]["detailedForecast"],
+        });
+    }
     log("forecast:", JSON.stringify(forecast));
     return(forecast);
 }
