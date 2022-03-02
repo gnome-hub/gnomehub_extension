@@ -214,7 +214,6 @@ function init() {
         log("no log file already stored")
     }
     file.create(Gio.FileCreateFlags.NONE, null);
-    
 }
 
 function enable() {
