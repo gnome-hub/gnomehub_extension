@@ -25,6 +25,7 @@ let iteration = 0;
 let indicator, uuid;
 
 let fname = GLib.getenv("XDG_RUNTIME_DIR") + "/notifications";
+// let fname = "/home/colton/work/gnomehub_extension/notifications";
 
 const Dropdown = GObject.registerClass(
     class Dropdown extends PanelMenu.Button {
@@ -42,12 +43,23 @@ const Dropdown = GObject.registerClass(
             this.add_child(this._label);
             
             //notifications section 
-            var notifications = []
+            this.notificationBox = new Array(10);
+            // var notifications = getNotifications();
+            var notifications = [];
+            log("notifications.length: "+notifications.length)
 
             // opening a known file and displaying the contents WORKS!
-            for(var i = 0;i < notifications.length;i++){
-                let notifMenuItem = new PopupMenu.PopupMenuItem(notifications[i]);
-                this.menu.addMenuItem(notifMenuItem);
+            for(var i = 0;i < 10;i++){
+                if (i < notifications.length) {
+                    log("i: "+i)
+                    log("notifications[i]: "+notifications[i])
+                    this.notificationBox[i] = new PopupMenu.PopupMenuItem(notifications[i]);
+                }
+                else {
+                    this.notificationBox[i] = new PopupMenu.PopupMenuItem("empty");
+                }
+                // let notifMenuItem = new PopupMenu.PopupMenuItem("menuItem"+i);
+                this.menu.addMenuItem(this.notificationBox[i]);
             }
             let source = Main.messageTray.getSources()
             log(source.length)            
@@ -71,11 +83,12 @@ const Dropdown = GObject.registerClass(
             return this._label.set_text(text);
         }
 
-        updateDisplay(notifications) {
-            // var notifications = _getNotifications()
-            for (let i = 0; i < notifications.length; i++) {
-                var notifMenuItem = new PopupMenu.PopupMenuItem(notifications[i]);
-                this.menu.addMenuItem(notifMenuItem);
+        updateDisplay() {
+            // build menu
+            // this.menu.destroy();
+            // this._init();
+            for (let i = 0; i < 10; i++) {
+                this.notificationBox[i] = new PopupMenu.PopupSeparatorMenuItem("test");
             }
         }
 
@@ -114,6 +127,7 @@ function updateMessageFile() {
 }
 
 function getNotifications() {
+    log("File name: "+fname)
     let file = Gio.file_new_for_path(fname);
     let notifs = [];
 
@@ -123,6 +137,8 @@ function getNotifications() {
         const dataInputStream = new Gio.DataInputStream({
             'base_stream' : fileInputStream
         });
+        var line;
+        // var length;
 
         while (([line, length] = dataInputStream.read_line(null)) && line != null) {
             if (line instanceof Uint8Array) {
@@ -132,7 +148,7 @@ function getNotifications() {
                 line = line.toString().trim();
             }
             log(line)
-            // notifs.push(line)
+            notifs.push(line)
         }
 
     } catch (e) {
@@ -172,7 +188,7 @@ class Extension {
 
         originalCountUpdated = MessageTray.Source.prototype.countUpdated;
         MessageTray.Source.prototype.countUpdated = _countUpdated;
-        // this.timeout = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT_IDLE, 1, this._refresh_monitor.bind(this));
+        this.timeout = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT_IDLE, 1, this._refresh_monitor.bind(this));
 
         Main.panel._rightBox.insert_child_at_index(button, 0);
     }
@@ -181,66 +197,24 @@ class Extension {
         this.indicator = null;
         Main.panel._rightBox.remove_child(button);
     }
+
+    _refresh_monitor() {
+        // fetch
+        let notifications = getNotifications();
+        log("Got:")
+        log(notifications)
+        // set
+        // this.indicator.updateDisplay();
+        this.indicator = null;
+        this.indicator = new Dropdown();
+        // enable();
+        // return
+        return GLib.SOURCE_CONTINUE;
+    }
 }
-// function _destroy() {
-//        let res = originalDestroy.call(this);
-
-//        //updateMessageFile();
-//        return res;
-// }
-
-// function init() {
-//     log(`initializing ${Me.metadata.name}`);
-    
-//     indicator = null;
-//     uui = uuid;
-//     log("gnomehub: In enable")
 
 
-//     let fname = GLib.getenv("XDG_RUNTIME_DIR") + "/notifications";
-//     let file = Gio.file_new_for_path(fname);
-   
-//     try {
-//         file.delete(null); //TODO: check if there is a file- if not no need to delete
-//     } catch (e) {
-//         log("no log file already stored")
-//     }
-//     file.create(Gio.FileCreateFlags.NONE, null);
-    
-// }
 
-// function enable() {
-//        indicator = new Dropdown();
-//        log("gnomehub: In enable")
-//        Main.panel.addToStatusArea(uuid, indicator, 0, 'right');
-
-
-//        originalCountUpdated = MessageTray.Source.prototype.countUpdated;
-//        originalGetNotifications = MessageTray.Source.prototype.getNotifications;
-//        originalDestroy = MessageTray.Source.prototype.destroy;
-
-//        MessageTray.Source.prototype.countUpdated = _countUpdated;
-//        MessageTray.Source.prototype.getNotifications = _getNotifications;
-//        MessageTray.Source.prototype.destroy = _destroy;
-
-//        Main.panel._rightBox.insert_child_at_index(button, 0);
-// }
-
-// function disable() {
-//        log(`disabling ${Me.metadata.name}`);
-
-//        // indicator.destroy();
-//        indicator = null;
-
-//        Main.panel._rightBox.remove_child(button);
-
-
-//        MessageTray.Source.prototype.countUpdated = originalCountUpdated;
-//        MessageTray.Source.prototype.getNotifications = originalGetNotifications;
-//        MessageTray.Source.prototype.destroy = originalDestroy;
-
-//        Main.panel._rightBox.remove_child(button);
-// }
 function init(meta) {
     return new Extension(meta.uuid);
 }
