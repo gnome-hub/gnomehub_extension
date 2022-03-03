@@ -249,7 +249,6 @@ function updateMessageFile() {
        let file = Gio.file_new_for_path(fname);
        let fstream = file.append_to(Gio.FileCreateFlags.NONE, null);
 
-       // TODO: make it store in a string we would actually want to display
        for (let i = 0; i < sources.length; i++) {
                for (let n = 0; n < sources[i].notifications.length; n++) {
                         let notif = sources[i].notifications[n];
@@ -261,7 +260,8 @@ function updateMessageFile() {
                         } else if (notif.urgency == 3) {
                             urg = "C"
                         }
-                           let data = urg + " " + notif.title + " — " + notif.bannerBodyText;
+                           // let data = urg + " " + notif.title + " — " + notif.bannerBodyText;
+                           let data = notif.title + " — " + notif.bannerBodyText;
                            data = data.replace("\\", "\\\\").replace("\n", "\\n") + "\n"
                            fstream.write(data, null);
                        }
@@ -332,9 +332,7 @@ class Extension {
 
         originalCountUpdated = MessageTray.Source.prototype.countUpdated;
         MessageTray.Source.prototype.countUpdated = _countUpdated;
-        this.timeout = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT_IDLE, 5, this._refresh_monitor.bind(this)); // REENABLE THIS
-
-        // Main.panel._rightBox.insert_child_at_index(button, 0);
+        // this.timeout = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT_IDLE, 5, this._refresh_monitor.bind(this)); // REENABLE THIS FOR DEBUG
     }
 
     disable() {
@@ -343,16 +341,10 @@ class Extension {
     }
 
     _refresh_monitor() {
-        // fetch
         let notifications = getNotifications();
         log("Got:")
         log(notifications)
-        // set
-        // this.indicator.updateDisplay();
-        // this.indicator = null; // not working :(
-        // this.indicator = new Dropdown();
-        // enable();
-        // return
+
         return GLib.SOURCE_CONTINUE;
     }
 }
