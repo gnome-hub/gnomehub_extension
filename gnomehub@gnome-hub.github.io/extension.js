@@ -1,4 +1,4 @@
-const { GObject, St, Clutter, GLib, Gio } = imports.gi;
+const { GObject, St, Clutter, GLib, Gio, Soup } = imports.gi;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
@@ -7,29 +7,26 @@ const Main = imports.ui.main;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 const MessageTray = imports.ui.messageTray;
-
+const Mainloop = imports.mainloop;
 const ByteArray = imports.byteArray;
 
-const Mainloop = imports.mainloop;
+// const Mainloop = imports.mainloop;
 const Lang = imports.lang;
 
-//const St = imports.gi.St;
-//const Gio = imports.gi.Gio;
-//const GLib = imports.gi.GLib;
-//const Main = imports.ui.main;
 const Tweener = imports.ui.tweener;
-//const MessageTray = imports.ui.messageTray;
 
 let text, button;
 let originalCountUpdated, originalDestroy;
 let iteration = 0;
-
+let returnedForecast;
 let indicator, uuid;
 
 let fname = GLib.getenv("XDG_RUNTIME_DIR") + "/notifications";
 
 var lastCPUTotal;
 var lastCPUUsed;
+
+var weatherCurrent = false;
 
 const Dropdown = GObject.registerClass(
     class Dropdown extends PanelMenu.Button {
@@ -44,23 +41,22 @@ const Dropdown = GObject.registerClass(
                 'style_class': 'label'
             });
 
-            this.add_child(this._label);
-            
-            
+            // declare variables
             let box = new St.BoxLayout({ style_class: 'panel-status-menu-box' });
             let systemBox = new St.BoxLayout({ style_class: 'panel-status-menu-box' });
             let notiftitlebox = new St.BoxLayout({ height: 25.0, style_class: 'popup-status-menu-box' });
             let notifboxes = new Array(10);
             let notifLabels = new Array(10);
             // let cpuLabel = new St.Label({text: '----', x_expand: true, x_align: Clutter.ActorAlign.START, y_expand=true});
-            let cpuLabel = new St.Label({text: '----', x_expand: true, x_align: Clutter.ActorAlign.START});
-            let memLabel = new St.Label({text: '----', x_expand: true, x_align: Clutter.ActorAlign.START});
+            let cpuLabel = new St.Label({text: '----', x_expand: true, x_align: Clutter.ActorAlign.CENTER});
+            let memLabel = new St.Label({text: '----', x_expand: true, x_align: Clutter.ActorAlign.CENTER});
 
             for (let i = 0; i < 10; i++) {
                 notifboxes[i] = new St.BoxLayout({ height: 25.0, style_class: 'popup-status-menu-box' });
                 notifLabels[i] = new St.Label({text: '----', x_expand: true, x_align: Clutter.ActorAlign.START, translation_x: 2.0});
             }
 
+            // update information
             function updateDisplay() {
                 let notifications = getNotifications();
                 // log(notifications.length)
@@ -77,14 +73,17 @@ const Dropdown = GObject.registerClass(
                         notifLabels[i].set_text("----")
                     }
                 }
-                
 
                 let cpuUsage = getCurrentCPUUsage();
-                cpuLabel.set_text("CPU: "+cpuUsage)
+                cpuLabel.set_text("CPU:\t"+cpuUsage)
                 
                 let memUsage = getCurrentMemoryUsage();
-                memLabel.set_text("MEM: "+memUsage)
+                memLabel.set_text("MEM:\t"+memUsage)
             }
+
+            // actually add it to the menu bar
+            // notifications section 
+            this.menu.addMenuItem( new PopupMenu.PopupSeparatorMenuItem('Notifications'));
 
             box.add_child(this._label);
             this.add_child(box);
@@ -95,12 +94,36 @@ const Dropdown = GObject.registerClass(
             }
 
             // add divider between sections
-            this.menu.addMenuItem( new PopupMenu.PopupSeparatorMenuItem());
-            
-            // widgets section
-            var widgetSection = new PopupMenu.PopupMenuItem('Widget');
-            this.menu.addMenuItem(widgetSection);
-            this.menu.addMenuItem( new PopupMenu.PopupSeparatorMenuItem());
+            this.menu.addMenuItem( new PopupMenu.PopupSeparatorMenuItem('Weather'));
+            /* widget section */
+            //let WidgetMenuTitle = new PopupMenu.PopupMenuItem
+            /* weather widget --> simplified */
+
+            //var weatherWidget = new PopupMenu.PopupSubMenuMenuItem('Weather');
+            var weatherText = "";
+            /* TODO get API to constantly update using loop below */
+            /*this.timer = Mainloop.timeout_add_seconds(30, Lang.bind(this, function() {
+            log("Updating Weather");
+
+            return true;
+            }));
+            */
+
+            returnedForecast = _getWeather();
+            weatherText = returnedForecast['name']+":"+returnedForecast['temperature']+returnedForecast['temperatureUnit'];
+            var weatherWidgetE = new PopupMenu.PopupMenuItem(weatherText);
+
+            /*for(var weatherIndex = 0; weatherIndex < 5; weatherIndex++){
+            var weatherText = new PopupMenu.PopupMenuItem('Forecast for ' + returnedForecast[weatherIndex]['name'] + ' in South Bend, IN:\n' + returnedForecast[weatherIndex]['detailedForecast']);
+            weatherWidget.menu.addMenuItem(weatherText);
+            }*/
+            this.menu.addMenuItem(weatherWidgetE);
+            /* end of weather widget */
+            /* end of widget section */
+
+            // add divider between sections
+            this.menu.addMenuItem( new PopupMenu.PopupSeparatorMenuItem(''));
+	    
             // settings section
             // let settingsMenuItem = new PopupMenu.PopupMenuItem('Settings');
             // settingsMenuItem.connect('activate', () => {
@@ -270,7 +293,7 @@ function updateMessageFile() {
 }
 
 function getNotifications() {
-    log("File name: "+fname)
+    // log("File name: "+fname)
     let file = Gio.file_new_for_path(fname);
     let notifs = [];
 
@@ -300,6 +323,50 @@ function getNotifications() {
     }
 
     return notifs
+}
+
+function _getWeather() {
+    let forecast = [];
+    // await _getWeatherUri().then(uri => {
+    //     let sessionSync = new Soup.SessionSync();
+    //     let msg = Soup.Message.new('GET', uri);
+    //     msg.request_headers.append("User-Agent", "Stackoverflow/1.0");
+    //     sessionSync.send_message(msg);
+    //     let response = JSON.parse(msg.response_body.data);
+    //     forecast = {
+    //         "name": response["properties"]["periods"][0]["name"],
+    //         "temperature": response["properties"]["periods"][0]["temperature"],
+    //         "detailedForecast": response["properties"]["periods"][0]["detailedForecast"],
+    //     };
+    // });
+
+    let sessionSync = new Soup.SessionSync();
+    let msg = Soup.Message.new('GET', 'https://api.weather.gov/gridpoints/IWX/29,63/forecast');
+    msg.request_headers.append("User-Agent", "Stackoverflow/1.0");
+    sessionSync.send_message(msg);
+    let response = JSON.parse(msg.response_body.data);
+    for(var index = 0; index < 5; index++){
+        forecast.push({
+            "name": response["properties"]["periods"][index]["name"],
+            "temperature": response["properties"]["periods"][index]["temperature"],
+            "detailedForecast": response["properties"]["periods"][index]["detailedForecast"],
+            "temperatureUnit": response["properties"]["periods"][index]["temperatureUnit"],
+        });
+    }
+    log("forecast:", JSON.stringify(forecast));
+    
+    return(forecast[0]);
+}
+
+function _getWeatherUri(){
+    let sessionSync = new Soup.SessionSync();
+    let msg = Soup.Message.new('GET', 'https://api.weather.gov/points/41.7003,-86.2386');
+    msg.request_headers.append("User-Agent", "Stackoverflow/1.0");
+    sessionSync.send_message(msg);
+    let response = JSON.parse(msg.response_body.data);
+    let uri = JSON.stringify(response["properties"]["forecast"])
+    log("uri:", uri);
+    return(uri);
 }
 
 function _countUpdated() {
@@ -348,7 +415,6 @@ class Extension {
         return GLib.SOURCE_CONTINUE;
     }
 }
-
 
 
 function init(meta) {
