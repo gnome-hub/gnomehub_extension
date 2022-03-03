@@ -10,6 +10,8 @@ const MessageTray = imports.ui.messageTray;
 
 const ByteArray = imports.byteArray;
 
+const Mainloop = imports.mainloop;
+const Lang = imports.lang;
 
 //const St = imports.gi.St;
 //const Gio = imports.gi.Gio;
@@ -42,27 +44,69 @@ const Dropdown = GObject.registerClass(
 
             this.add_child(this._label);
             
-            //notifications section 
-            this.notificationBox = new Array(10);
-            // var notifications = getNotifications();
-            var notifications = [];
-            log("notifications.length: "+notifications.length)
+            
+            let box = new St.BoxLayout({ style_class: 'panel-status-menu-box' });
+            let notiftitlebox = new St.BoxLayout({ height: 25.0, style_class: 'popup-status-menu-box' });
+            let notifboxes = new Array(10);
+            let notifLabels = new Array(10);
 
-            // opening a known file and displaying the contents WORKS!
-            for(var i = 0;i < 10;i++){
-                if (i < notifications.length) {
-                    log("i: "+i)
-                    log("notifications[i]: "+notifications[i])
-                    this.notificationBox[i] = new PopupMenu.PopupMenuItem(notifications[i]);
-                }
-                else {
-                    this.notificationBox[i] = new PopupMenu.PopupMenuItem("empty");
-                }
-                // let notifMenuItem = new PopupMenu.PopupMenuItem("menuItem"+i);
-                this.menu.addMenuItem(this.notificationBox[i]);
+            for (let i = 0; i < 10; i++) {
+                notifboxes[i] = new St.BoxLayout({ height: 25.0, style_class: 'popup-status-menu-box' });
+                notifLabels[i] = new St.Label({text: '----', x_expand: true, x_align: Clutter.ActorAlign.START, translation_x: 2.0});
             }
-            let source = Main.messageTray.getSources()
-            log(source.length)            
+
+            function updateDisplay() {
+                log("UPDATING DISPLAY")
+                // for (let i = 0; i < 10; i++) {
+                //     this.notificationBox[i] = new PopupMenu.PopupSeparatorMenuItem("test");
+                // }
+
+                let notifications = getNotifications();
+                log(notifications.length)
+                let i = 0;
+                while (i < 10 && i < notifications.length) {
+                    notifLabels[i].set_text(notifications[i]);
+                    i = i + 1;
+                }
+                for (let i = 0; i < 10; i++) {
+                    if (i < notifications.length) {
+                        notifLabels[i].set_text(notifications[i])
+                    }
+                    else {
+                        notifLabels[i].set_text("----")
+                    }
+                }
+            }
+
+            box.add_child(this._label);
+            this.add_child(box);
+            this.menu.box.add(notiftitlebox);
+            for (let i = 0; i < 10; i++) {
+                notifboxes[i].add(notifLabels[i]);
+                this.menu.box.add(notifboxes[i]);
+            }
+
+            
+            //notifications section 
+            // var notifications = [];
+            // log("notifications.length: "+notifications.length)
+
+            // // opening a known file and displaying the contents WORKS!
+            // for(var i = 0;i < 10;i++){
+            //     if (i < notifications.length) {
+            //         log("i: "+i)
+            //         log("notifications[i]: "+notifications[i])
+            //         this.notificationBox[i] = new PopupMenu.PopupMenuItem(notifications[i]);
+            //     }
+            //     else {
+            //         this.notificationBox[i] = new PopupMenu.PopupMenuItem("empty");
+            //     }
+            //     // let notifMenuItem = new PopupMenu.PopupMenuItem("menuItem"+i);
+            //     this.menu.box.add(this.notificationBox[i]);
+            // }
+            // this.add_child(box);
+            // let source = Main.messageTray.getSources();
+            // log(source.length)
             
             // add divider between sections
             this.menu.addMenuItem( new PopupMenu.PopupSeparatorMenuItem());
@@ -77,19 +121,22 @@ const Dropdown = GObject.registerClass(
                 ExtensionUtils.openPrefs();
             });
             this.menu.addMenuItem(settingsMenuItem); 
+            
+            // this.timeout = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT_IDLE, 1, updateDisplay.bind(this)); // REENABLE THIS
+            this._eventLoop = Mainloop.timeout_add(1000, Lang.bind(this, function (){
+                updateDisplay();
+                return true;
+            }))
         }
 
         setText(text) {
             return this._label.set_text(text);
         }
 
-        updateDisplay() {
-            // build menu
-            // this.menu.destroy();
-            // this._init();
-            for (let i = 0; i < 10; i++) {
-                this.notificationBox[i] = new PopupMenu.PopupSeparatorMenuItem("test");
-            }
+        _onDestroy() {
+            Mainloop.source_remove(this._eventLoop);
+            this.menu.removeAll();
+            super._onDestroy();
         }
 
 
@@ -131,14 +178,12 @@ function getNotifications() {
     let file = Gio.file_new_for_path(fname);
     let notifs = [];
 
-    // update notifications TODO: only read the lines necessary to display instead of the whole file
     try {
         const fileInputStream = file.read(null);
         const dataInputStream = new Gio.DataInputStream({
             'base_stream' : fileInputStream
         });
         var line;
-        // var length;
 
         while (([line, length] = dataInputStream.read_line(null)) && line != null) {
             if (line instanceof Uint8Array) {
@@ -147,8 +192,11 @@ function getNotifications() {
             else {
                 line = line.toString().trim();
             }
-            log(line)
-            notifs.push(line)
+            notifs.unshift(line) // use stack to push to top
+
+            if (notifs.length > 10) {
+                break;
+            }
         }
 
     } catch (e) {
@@ -176,6 +224,7 @@ class Extension {
         this.indicator = null;
 
         let file = Gio.file_new_for_path(fname);
+        // TODO: uncomment when releasing final version
         try {
             file.delete(null); //TODO: check if there is a file- if not no need to delete
         } catch (e) {
@@ -188,9 +237,9 @@ class Extension {
 
         originalCountUpdated = MessageTray.Source.prototype.countUpdated;
         MessageTray.Source.prototype.countUpdated = _countUpdated;
-        this.timeout = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT_IDLE, 1, this._refresh_monitor.bind(this));
+        this.timeout = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT_IDLE, 5, this._refresh_monitor.bind(this)); // REENABLE THIS
 
-        Main.panel._rightBox.insert_child_at_index(button, 0);
+        // Main.panel._rightBox.insert_child_at_index(button, 0);
     }
 
     disable() {
@@ -205,8 +254,8 @@ class Extension {
         log(notifications)
         // set
         // this.indicator.updateDisplay();
-        this.indicator = null;
-        this.indicator = new Dropdown();
+        // this.indicator = null; // not working :(
+        // this.indicator = new Dropdown();
         // enable();
         // return
         return GLib.SOURCE_CONTINUE;
