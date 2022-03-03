@@ -45,9 +45,13 @@ const Dropdown = GObject.registerClass(
             
             
             let box = new St.BoxLayout({ style_class: 'panel-status-menu-box' });
+            let systemBox = new St.BoxLayout({ style_class: 'panel-status-menu-box' });
             let notiftitlebox = new St.BoxLayout({ height: 25.0, style_class: 'popup-status-menu-box' });
             let notifboxes = new Array(10);
             let notifLabels = new Array(10);
+            // let cpuLabel = new St.Label({text: '----', x_expand: true, x_align: Clutter.ActorAlign.START, y_expand=true});
+            let cpuLabel = new St.Label({text: '----', x_expand: true, x_align: Clutter.ActorAlign.START});
+            let memLabel = new St.Label({text: '----', x_expand: true, x_align: Clutter.ActorAlign.START});
 
             for (let i = 0; i < 10; i++) {
                 notifboxes[i] = new St.BoxLayout({ height: 25.0, style_class: 'popup-status-menu-box' });
@@ -56,7 +60,7 @@ const Dropdown = GObject.registerClass(
 
             function updateDisplay() {
                 let notifications = getNotifications();
-                log(notifications.length)
+                // log(notifications.length)
                 let i = 0;
                 while (i < 10 && i < notifications.length) {
                     notifLabels[i].set_text(notifications[i]);
@@ -70,6 +74,13 @@ const Dropdown = GObject.registerClass(
                         notifLabels[i].set_text("----")
                     }
                 }
+                
+
+                let cpuUsage = getCPU();
+                cpuLabel.set_text("CPU: "+cpuUsage)
+                
+                let memUsage = getMem();
+                memLabel.set_text("MEM: "+memUsage)
             }
 
             box.add_child(this._label);
@@ -88,11 +99,16 @@ const Dropdown = GObject.registerClass(
             this.menu.addMenuItem(widgetSection);
             this.menu.addMenuItem( new PopupMenu.PopupSeparatorMenuItem());
             // settings section
-            let settingsMenuItem = new PopupMenu.PopupMenuItem('Settings');
-            settingsMenuItem.connect('activate', () => {
-                ExtensionUtils.openPrefs();
-            });
-            this.menu.addMenuItem(settingsMenuItem); 
+            // let settingsMenuItem = new PopupMenu.PopupMenuItem('Settings');
+            // settingsMenuItem.connect('activate', () => {
+            //     ExtensionUtils.openPrefs();
+            // });
+            // this.menu.addMenuItem(settingsMenuItem); 
+            
+            // cpu and memory section
+            this.menu.box.add(cpuLabel);
+            this.menu.box.add(memLabel);
+
             
             this._eventLoop = Mainloop.timeout_add(1000, Lang.bind(this, function (){
                 updateDisplay();
@@ -100,9 +116,9 @@ const Dropdown = GObject.registerClass(
             }))
         }
 
-        setText(text) {
-            return this._label.set_text(text);
-        }
+        // setText(text) {
+        //     return this._label.set_text(text);
+        // }
 
         _onDestroy() {
             Mainloop.source_remove(this._eventLoop);
@@ -113,6 +129,14 @@ const Dropdown = GObject.registerClass(
 
     }
 )
+
+function getCPU() {
+    return 74.04;
+}
+
+function getMem() {
+    return 26.4;
+}
 
 function updateMessageFile() {
        let sources = Main.messageTray.getSources();
