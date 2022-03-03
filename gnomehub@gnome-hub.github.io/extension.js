@@ -28,6 +28,9 @@ let indicator, uuid;
 
 let fname = GLib.getenv("XDG_RUNTIME_DIR") + "/notifications";
 
+var lastCPUTotal;
+var lastCPUUsed;
+
 const Dropdown = GObject.registerClass(
     class Dropdown extends PanelMenu.Button {
         _init() {
@@ -76,10 +79,10 @@ const Dropdown = GObject.registerClass(
                 }
                 
 
-                let cpuUsage = getCPU();
+                let cpuUsage = getCurrentCPUUsage();
                 cpuLabel.set_text("CPU: "+cpuUsage)
                 
-                let memUsage = getMem();
+                let memUsage = getCurrentMemoryUsage();
                 memLabel.set_text("MEM: "+memUsage)
             }
 
@@ -130,12 +133,114 @@ const Dropdown = GObject.registerClass(
     }
 )
 
-function getCPU() {
-    return 74.04;
+const getCurrentCPUUsage = () => {
+    let currentCPUUsage = 0;
+
+    try {
+        const inputFile = Gio.File.new_for_path('/proc/stat');
+        const fileInputStream = inputFile.read(null);
+        const dataInputStream = new Gio.DataInputStream({
+            'base_stream': fileInputStream
+        });
+
+        let currentCPUUsed = 0;
+        let currentCPUTotal = 0;
+        let line = null;
+        let length = 0;
+
+        while (([line, length] = dataInputStream.read_line(null)) && line != null) {
+            if (line instanceof Uint8Array) {
+                line = ByteArray.toString(line).trim();
+            } else {
+                line = line.toString().trim();
+            }
+
+            const fields = line.split(/\W+/);
+
+            if (fields.length < 2) {
+                continue;
+            }
+
+            const itemName = fields[0];
+            if (itemName == 'cpu' && fields.length >= 5) {
+                const user = Number.parseInt(fields[1]);
+                const system = Number.parseInt(fields[3]);
+                const idle = Number.parseInt(fields[4]);
+                currentCPUUsed = user + system;
+                currentCPUTotal = user + system + idle;
+                break;
+            }
+        }
+
+        fileInputStream.close(null);
+
+        // Avoid divide by zero
+        if (currentCPUTotal - lastCPUTotal !== 0) {
+            currentCPUUsage = (currentCPUUsed - lastCPUUsed) / (currentCPUTotal - lastCPUTotal);
+        }
+
+        lastCPUTotal = currentCPUTotal;
+        lastCPUUsed = currentCPUUsed;
+    } catch (e) {
+        logError(e);
+    }
+    return currentCPUUsage;
 }
 
-function getMem() {
-    return 26.4;
+const getCurrentMemoryUsage = () => {
+    let currentMemoryUsage = 0;
+
+    try {
+        const inputFile = Gio.File.new_for_path('/proc/meminfo');
+        const fileInputStream = inputFile.read(null);
+        const dataInputStream = new Gio.DataInputStream({
+            'base_stream': fileInputStream
+        });
+
+        let memTotal = -1;
+        let memAvailable = -1;
+        let line = null;
+        let length = 0;
+
+        while (([line, length] = dataInputStream.read_line(null)) && line != null) {
+            if (line instanceof Uint8Array) {
+                line = ByteArray.toString(line).trim();
+            } else {
+                line = line.toString().trim();
+            }
+
+            const fields = line.split(/\W+/);
+
+            if (fields.length < 2) {
+                break;
+            }
+
+            const itemName = fields[0];
+            const itemValue = Number.parseInt(fields[1]);
+
+            if (itemName == 'MemTotal') {
+                memTotal = itemValue;
+            }
+
+            if (itemName == 'MemAvailable') {
+                memAvailable = itemValue;
+            }
+
+            if (memTotal !== -1 && memAvailable !== -1) {
+                break;
+            }
+        }
+
+        fileInputStream.close(null);
+
+        if (memTotal !== -1 && memAvailable !== -1) {
+            const memUsed = memTotal - memAvailable;
+            currentMemoryUsage = memUsed / memTotal;
+        }
+    } catch (e) {
+        logError(e);
+    }
+    return currentMemoryUsage;
 }
 
 function updateMessageFile() {
