@@ -7,9 +7,9 @@ const Main = imports.ui.main;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 const MessageTray = imports.ui.messageTray;
-
+const Mainloop = imports.mainloop;
 const ByteArray = imports.byteArray;
-
+const Lang = imports.lang;
 
 //const St = imports.gi.St;
 //const Gio = imports.gi.Gio;
@@ -24,9 +24,12 @@ let iteration = 0;
 let returnedForecast;
 let indicator, uuid;
 
+let weatherCurrent = false;
+
 const Dropdown = GObject.registerClass(
     class Dropdown extends PanelMenu.Button {
         _init() {
+            //this.weatherwidgetBox = new St.BoxLayout({style_class="weatherWidget",vertical:true});
             super._init(0.0, 'gnome-hub');
             log("gnomehub: in indicator")
 
@@ -41,6 +44,7 @@ const Dropdown = GObject.registerClass(
             
             //notifications section 
             // call a function which returns a list of notifications with title and app name (that will replace list currently here)
+            this.menu.addMenuItem( new PopupMenu.PopupSeparatorMenuItem('Notifications'));
             var notifications = _getNotifications()
             // var notifications = ['Test1','Test2','Test3']
             for(var i = 0;i < notifications.length;i++){
@@ -51,21 +55,38 @@ const Dropdown = GObject.registerClass(
             log(source.length)            
             
             // add divider between sections
-            this.menu.addMenuItem( new PopupMenu.PopupSeparatorMenuItem());
-          
-	    var weatherWidget = new PopupMenu.PopupSubMenuMenuItem('Weather');
+            this.menu.addMenuItem( new PopupMenu.PopupSeparatorMenuItem('Widgets'));
+            /* widget section */
+           //let WidgetMenuTitle = new PopupMenu.PopupMenuItem
+           /* weather widget --> simplified */
+        
+	    //var weatherWidget = new PopupMenu.PopupSubMenuMenuItem('Weather');
+        var weatherText = "";
+        /* TODO get API to constantly update using loop below */
+           /*this.timer = Mainloop.timeout_add_seconds(30, Lang.bind(this, function() {
+				log("Updating Weather");
+                
+				return true;
+				}));
+            */
+
         returnedForecast = _getWeather();
-        for(var weatherIndex = 0; weatherIndex < 5; weatherIndex++){
+        weatherText = returnedForecast['name']+":"+returnedForecast['temperature']+returnedForecast['temperatureUnit'];
+        var weatherWidgetE = new PopupMenu.PopupMenuItem(weatherText);
+
+           /*for(var weatherIndex = 0; weatherIndex < 5; weatherIndex++){
 	    	var weatherText = new PopupMenu.PopupMenuItem('Forecast for ' + returnedForecast[weatherIndex]['name'] + ' in South Bend, IN:\n' + returnedForecast[weatherIndex]['detailedForecast']);
 	    	weatherWidget.menu.addMenuItem(weatherText);
-	    }
-	    this.menu.addMenuItem(weatherWidget);
-            
+	    }*/
+	    this.menu.addMenuItem(weatherWidgetE);
+            /* end of weather widget */
+            /* end of widget section */
+
 	    // add divider between sections
-            this.menu.addMenuItem( new PopupMenu.PopupSeparatorMenuItem());
+            this.menu.addMenuItem( new PopupMenu.PopupSeparatorMenuItem('Settings'));
 	    
             // settings section
-            let settingsMenuItem = new PopupMenu.PopupMenuItem('Settings');
+            let settingsMenuItem = new PopupMenu.PopupMenuItem('System Stats');
             settingsMenuItem.connect('activate', () => {
                 ExtensionUtils.openPrefs();
             });
@@ -166,10 +187,12 @@ function _getWeather() {
             "name": response["properties"]["periods"][index]["name"],
             "temperature": response["properties"]["periods"][index]["temperature"],
             "detailedForecast": response["properties"]["periods"][index]["detailedForecast"],
+            "temperatureUnit": response["properties"]["periods"][index]["temperatureUnit"],
         });
     }
     log("forecast:", JSON.stringify(forecast));
-    return(forecast);
+    
+    return(forecast[0]);
 }
 
 function _getWeatherUri(){
