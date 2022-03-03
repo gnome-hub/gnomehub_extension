@@ -1,4 +1,4 @@
-const { GObject, St, Clutter, GLib, Gio } = imports.gi;
+const { GObject, St, Clutter, GLib, Gio, Soup } = imports.gi;
 
 const ExtensionUtils = imports.misc.extensionUtils;
 const Me = ExtensionUtils.getCurrentExtension();
@@ -7,6 +7,8 @@ const Main = imports.ui.main;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 const MessageTray = imports.ui.messageTray;
+
+const ByteArray = imports.byteArray;
 
 
 //const St = imports.gi.St;
@@ -19,7 +21,7 @@ const Tweener = imports.ui.tweener;
 let text, button;
 let originalCountUpdated, originalDestroy;
 let iteration = 0;
-
+let returnedForecast;
 let indicator, uuid;
 
 const Dropdown = GObject.registerClass(
@@ -39,7 +41,8 @@ const Dropdown = GObject.registerClass(
             
             //notifications section 
             // call a function which returns a list of notifications with title and app name (that will replace list currently here)
-            var notifications = ['Test1','Test2','Test3']
+            var notifications = _getNotifications()
+            // var notifications = ['Test1','Test2','Test3']
             for(var i = 0;i < notifications.length;i++){
                 let notifMenuItem = new PopupMenu.PopupMenuItem(notifications[i]);
                 this.menu.addMenuItem(notifMenuItem);
@@ -49,11 +52,18 @@ const Dropdown = GObject.registerClass(
             
             // add divider between sections
             this.menu.addMenuItem( new PopupMenu.PopupSeparatorMenuItem());
+          
+	    var weatherWidget = new PopupMenu.PopupSubMenuMenuItem('Weather');
+        returnedForecast = _getWeather();
+        for(var weatherIndex = 0; weatherIndex < 5; weatherIndex++){
+	    	var weatherText = new PopupMenu.PopupMenuItem('Forecast for ' + returnedForecast[weatherIndex]['name'] + ' in South Bend, IN:\n' + returnedForecast[weatherIndex]['detailedForecast']);
+	    	weatherWidget.menu.addMenuItem(weatherText);
+	    }
+	    this.menu.addMenuItem(weatherWidget);
             
-            // widgets section
-            var widgetSection = new PopupMenu.PopupMenuItem('Widget');
-            this.menu.addMenuItem(widgetSection);
+	    // add divider between sections
             this.menu.addMenuItem( new PopupMenu.PopupSeparatorMenuItem());
+	    
             // settings section
             let settingsMenuItem = new PopupMenu.PopupMenuItem('Settings');
             settingsMenuItem.connect('activate', () => {
@@ -70,9 +80,9 @@ const Dropdown = GObject.registerClass(
 
 function updateMessageFile() {
        let sources = Main.messageTray.getSources();
-       log("XDG_RUNTIME_DIR")
+       log("XDG_RUNTIME_DIR") // TODO: use xdg/gnomehub
+                              // TODO: store data in a json format - easier once we add cpu and memory metrics
        let fname = GLib.getenv("XDG_RUNTIME_DIR") + "/notifications";
-       log(fname)
        let file = Gio.file_new_for_path(fname);
        let fstream = file.append_to(Gio.FileCreateFlags.NONE, null);
        //let fstream = file.replace(null, false, Gio.FileCreateFlags.NONE, null);
@@ -93,13 +103,84 @@ function updateMessageFile() {
                         }
                            let data = urg + " " + notif.title + " — " + notif.bannerBodyText;
                            data = data.replace("\\", "\\\\").replace("\n", "\\n") + "\n"
-                           fstream.write(data, null, data.length);
+                           fstream.write(data, null, data.length); // TODO: figure out which argument is unnecessary- there is a warning that there are too many arguments to this method
                        }
               }
-
        fstream.close(null);
-        
+}
 
+function _getNotifications() {
+    // update notifications TODO: only read the lines necessary to display instead of the whole file
+    let fname = GLib.getenv("XDG_RUNTIME_DIR") + "/notifications";
+    let file = Gio.file_new_for_path(fname);
+    // try {
+    //     const [, contents, etag] = file.load_contents(null);
+    //     // log(contents.toString());
+    //     log("GNOMEHUB: HERE")
+    //     log(ByteArray.toString(contents))
+    //     GLib.free(contents);
+    // } catch (e) {
+    //     log(e)
+    // }
+
+    const fileInputStream = file.read(null);
+    const dataInputStream = new Gio.DataInputStream({
+        'base_stream' : fileInputStream
+    });
+
+    while (([line, length] = dataInputStream.read_line(null)) && line != null) {
+        if (line instanceof Uint8Array) {
+            line = ByteArray.toString(line).trim();
+        }
+        else {
+            line = line.toString().trim();
+        }
+        log(line) // TODO: append line to an array and return that array
+    }
+
+    return []
+}
+
+function _getWeather() {
+    let forecast = [];
+    // await _getWeatherUri().then(uri => {
+    //     let sessionSync = new Soup.SessionSync();
+    //     let msg = Soup.Message.new('GET', uri);
+    //     msg.request_headers.append("User-Agent", "Stackoverflow/1.0");
+    //     sessionSync.send_message(msg);
+    //     let response = JSON.parse(msg.response_body.data);
+    //     forecast = {
+    //         "name": response["properties"]["periods"][0]["name"],
+    //         "temperature": response["properties"]["periods"][0]["temperature"],
+    //         "detailedForecast": response["properties"]["periods"][0]["detailedForecast"],
+    //     };
+    // });
+
+    let sessionSync = new Soup.SessionSync();
+    let msg = Soup.Message.new('GET', 'https://api.weather.gov/gridpoints/IWX/29,63/forecast');
+    msg.request_headers.append("User-Agent", "Stackoverflow/1.0");
+    sessionSync.send_message(msg);
+    let response = JSON.parse(msg.response_body.data);
+    for(var index = 0; index < 5; index++){
+        forecast.push({
+            "name": response["properties"]["periods"][index]["name"],
+            "temperature": response["properties"]["periods"][index]["temperature"],
+            "detailedForecast": response["properties"]["periods"][index]["detailedForecast"],
+        });
+    }
+    log("forecast:", JSON.stringify(forecast));
+    return(forecast);
+}
+
+function _getWeatherUri(){
+    let sessionSync = new Soup.SessionSync();
+    let msg = Soup.Message.new('GET', 'https://api.weather.gov/points/41.7003,-86.2386');
+    msg.request_headers.append("User-Agent", "Stackoverflow/1.0");
+    sessionSync.send_message(msg);
+    let response = JSON.parse(msg.response_body.data);
+    let uri = JSON.stringify(response["properties"]["forecast"])
+    log("uri:", uri);
+    return(uri);
 }
 
 function _countUpdated() {
@@ -127,7 +208,12 @@ function init() {
     let fname = GLib.getenv("XDG_RUNTIME_DIR") + "/notifications";
     let file = Gio.file_new_for_path(fname);
    
-    if(file.exists()) file.delete(null);
+    try {
+        file.delete(null); //TODO: check if there is a file- if not no need to delete
+    } catch (e) {
+        log("no log file already stored")
+    }
+    file.create(Gio.FileCreateFlags.NONE, null);
 }
 
 function enable() {
