@@ -27,7 +27,6 @@ let iteration = 0;
 let indicator, uuid;
 
 let fname = GLib.getenv("XDG_RUNTIME_DIR") + "/notifications";
-// let fname = "/home/colton/work/gnomehub_extension/notifications";
 
 const Dropdown = GObject.registerClass(
     class Dropdown extends PanelMenu.Button {
@@ -56,11 +55,6 @@ const Dropdown = GObject.registerClass(
             }
 
             function updateDisplay() {
-                log("UPDATING DISPLAY")
-                // for (let i = 0; i < 10; i++) {
-                //     this.notificationBox[i] = new PopupMenu.PopupSeparatorMenuItem("test");
-                // }
-
                 let notifications = getNotifications();
                 log(notifications.length)
                 let i = 0;
@@ -86,28 +80,6 @@ const Dropdown = GObject.registerClass(
                 this.menu.box.add(notifboxes[i]);
             }
 
-            
-            //notifications section 
-            // var notifications = [];
-            // log("notifications.length: "+notifications.length)
-
-            // // opening a known file and displaying the contents WORKS!
-            // for(var i = 0;i < 10;i++){
-            //     if (i < notifications.length) {
-            //         log("i: "+i)
-            //         log("notifications[i]: "+notifications[i])
-            //         this.notificationBox[i] = new PopupMenu.PopupMenuItem(notifications[i]);
-            //     }
-            //     else {
-            //         this.notificationBox[i] = new PopupMenu.PopupMenuItem("empty");
-            //     }
-            //     // let notifMenuItem = new PopupMenu.PopupMenuItem("menuItem"+i);
-            //     this.menu.box.add(this.notificationBox[i]);
-            // }
-            // this.add_child(box);
-            // let source = Main.messageTray.getSources();
-            // log(source.length)
-            
             // add divider between sections
             this.menu.addMenuItem( new PopupMenu.PopupSeparatorMenuItem());
             
@@ -122,7 +94,6 @@ const Dropdown = GObject.registerClass(
             });
             this.menu.addMenuItem(settingsMenuItem); 
             
-            // this.timeout = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT_IDLE, 1, updateDisplay.bind(this)); // REENABLE THIS
             this._eventLoop = Mainloop.timeout_add(1000, Lang.bind(this, function (){
                 updateDisplay();
                 return true;
@@ -146,14 +117,10 @@ const Dropdown = GObject.registerClass(
 function updateMessageFile() {
        let sources = Main.messageTray.getSources();
        // log("XDG_RUNTIME_DIR") // TODO: use xdg/gnomehub
-                              // TODO: store data in a json format - easier once we add cpu and memory metrics
        let file = Gio.file_new_for_path(fname);
        let fstream = file.append_to(Gio.FileCreateFlags.NONE, null);
-       //let fstream = file.replace(null, false, Gio.FileCreateFlags.NONE, null);
-/*
-       const ioStream = file.open_readwrite(null);
-       const outStream = ioStream.get_output_stream;
-*/
+
+       // TODO: make it store in a string we would actually want to display
        for (let i = 0; i < sources.length; i++) {
                for (let n = 0; n < sources[i].notifications.length; n++) {
                         let notif = sources[i].notifications[n];
@@ -167,7 +134,7 @@ function updateMessageFile() {
                         }
                            let data = urg + " " + notif.title + " — " + notif.bannerBodyText;
                            data = data.replace("\\", "\\\\").replace("\n", "\\n") + "\n"
-                           fstream.write(data, null, data.length); // TODO: figure out which argument is unnecessary- there is a warning that there are too many arguments to this method
+                           fstream.write(data, null);
                        }
               }
        fstream.close(null);
@@ -224,7 +191,6 @@ class Extension {
         this.indicator = null;
 
         let file = Gio.file_new_for_path(fname);
-        // TODO: uncomment when releasing final version
         try {
             file.delete(null); //TODO: check if there is a file- if not no need to delete
         } catch (e) {
