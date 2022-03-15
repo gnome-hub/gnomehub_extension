@@ -266,6 +266,8 @@ const getCurrentMemoryUsage = () => {
     return currentMemoryUsage;
 }
 
+// TODO: Check to make sure only new notifications are added to the log instead of all of them
+//       or only 
 function updateMessageFile() {
        let sources = Main.messageTray.getSources();
        // log("XDG_RUNTIME_DIR") // TODO: use xdg/gnomehub
@@ -316,6 +318,10 @@ function getNotifications() {
             if (notifs.length > 10) {
                 break;
             }
+        }
+
+        while (notifs.length < 10) {
+            notifs.push("----")
         }
 
     } catch (e) {
