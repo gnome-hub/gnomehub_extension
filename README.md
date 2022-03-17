@@ -8,6 +8,16 @@
 Want to join the project? Interested in making a contribution to this project? 
 
 JOIN OUR [DISCORD](https://discord.gg/9cHcHyf5e6) to become a part of our community
+# Table of Contents
+1. Features
+2. Setup Instructions
+  a. Installation from Gnome Extensions store
+  b. Installation through GitHub
+4. Gallery
+5. Making a Contribution
+  a. Reporting a new issue / feature
+  b. Addressing a current issue / pull request
+
 
 # Features
 - Notification Tabs
@@ -28,8 +38,9 @@ This extension is still a work in progress and we plan to have our first prototy
 > 
 > 1. Open Terminal on your linux desktop
 > 2. Run `sudo apt get update`
-> 3. Make sure you have git installed on your local terminal, if not, instructions are available [here](https://github.com/git-guides/install-git#:~:text=%20If%20you%20already%20have%20Homwbrew%20installed%2C%20you,the%20installation%20by%20typing%3A%20git%20version.%20More%20)
-> 4. Once complete, move onto Step 2
+> 3. Run `sudo apt get upgrade`
+> 4. Make sure you have git installed on your local terminal, if not, instructions are available [here](https://github.com/git-guides/install-git#:~:text=%20If%20you%20already%20have%20Homwbrew%20installed%2C%20you,the%20installation%20by%20typing%3A%20git%20version.%20More%20)
+> 5. Once complete, move onto Step 2
 
 > Step 2 - Installing Git Repository
 > 
@@ -53,3 +64,48 @@ This extension is still a work in progress and we plan to have our first prototy
 More images can be found [HERE](https://gnome-hub.github.io/gallery.html)
 
 # Make a contribution
+## Case 1 - Creating a new issue / feature request
+> Step 1 - Opening an Issue
+> 
+> 1. Go to the [Issues](https://github.com/gnome-hub/gnomehub_extension/issues) tab in this repository
+> 2. Click on `New Issue`
+> 3. Select if you want to `Report a Bug` or `Request a Feature`
+> 4. Click the `Get Started` button for whichever one you want to work on
+> 5. Once complete, move onto Step 2
+
+> Step 2 - Filling out details and submitting the issue
+> 
+> 1. Answer all the questions on the template to the best of your ability - adding a title is `REQUIRED`
+> 2. Once complete, click on the `Submit New Issue` button
+> 3. Thank you for the contribution, someone from the community will address the issue soon!
+
+## Case 2 - Addressing a current issue / feature request
+> Step 1 - Picking an issue
+> 
+> 1. Go to the [Issues](https://github.com/gnome-hub/gnomehub_extension/issues) tab in this repository
+> 2. Select which issue you want to work on. Each issue comes with a tag. Eg: `Bug`
+> 3. Once open, look into details of the bug to make sure it is something you would like to work on
+> 4. Assign the issues to yourself by adding yourself under the `Assignees` section
+> 5. Once complete, move to step 2
+
+> Step 2 - Setting up repository
+> 
+> 1. Go to the [homepage](https://github.com/gnome-hub/gnomehub_extension/) of the repository
+> 2. Click on the `Code` button
+> 3. Copy the link to your clipboard
+> 4. Go to your LINUX COMPUTER terminal and into the directory you want to work on the extension from
+> 5. Type `git clone **URL**`
+> NOTE: this step will only work if you have Git installed on your command line
+> 6. Once complete, move to Step 3 
+
+> Step 3 - Fixing Bug and creating a pull request
+> 
+> 1. Before you work on the code, create a new branch to work on
+> 2. Work on the code on the new branch and fix the issue
+> 2. Once complete, Push the changes onto the branch 
+> 4. Create a `pull request` and add a comment stating what you did to fix the issue
+> 5. One of the reviewers will review your code and merge it with the main branch
+> 
+> Thank you for your contribution!
+
+
