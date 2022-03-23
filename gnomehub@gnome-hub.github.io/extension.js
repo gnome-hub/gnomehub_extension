@@ -10,6 +10,8 @@ const MessageTray = imports.ui.messageTray;
 const Mainloop = imports.mainloop;
 const ByteArray = imports.byteArray;
 
+const extensionList = imports.extensionList;
+
 // const Mainloop = imports.mainloop;
 const Lang = imports.lang;
 
@@ -135,7 +137,8 @@ const Dropdown = GObject.registerClass(
             this.menu.box.add(cpuLabel);
             this.menu.box.add(memLabel);
 
-            
+            this.menu.box.add(extensionList);
+
             this._eventLoop = Mainloop.timeout_add(1000, Lang.bind(this, function (){
                 updateDisplay();
                 return true;
