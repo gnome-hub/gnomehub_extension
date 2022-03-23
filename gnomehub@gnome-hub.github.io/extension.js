@@ -79,6 +79,7 @@ const Dropdown = GObject.registerClass(
                 
                 let memUsage = getCurrentMemoryUsage();
                 memLabel.set_text("MEM:\t"+memUsage)
+
             }
 
             // actually add it to the menu bar
@@ -110,7 +111,7 @@ const Dropdown = GObject.registerClass(
             */
 
             returnedForecast = _getWeather();
-            weatherText = returnedForecast['name']+":"+returnedForecast['temperature']+returnedForecast['temperatureUnit'];
+            weatherText = returnedForecast['name']+": "+returnedForecast['temperature']+returnedForecast['temperatureUnit'];
             var weatherWidgetE = new PopupMenu.PopupMenuItem(weatherText);
 
             /*for(var weatherIndex = 0; weatherIndex < 5; weatherIndex++){
@@ -119,6 +120,14 @@ const Dropdown = GObject.registerClass(
             }*/
             this.menu.addMenuItem(weatherWidgetE);
             /* end of weather widget */
+
+	    /* start of battery widget */
+	    this.menu.addMenuItem(new PopupMenu.PopupSeparatorMenuItem('Battery Level'));
+	    let batInfo = getCurrentBatteryInfo();
+	    var batteryLevel = new PopupMenu.PopupMenuItem(batInfo);
+	    this.menu.addMenuItem(batteryLevel);
+	    /* end of battery widget */
+
             /* end of widget section */
 
             // add divider between sections
@@ -135,7 +144,6 @@ const Dropdown = GObject.registerClass(
             this.menu.box.add(cpuLabel);
             this.menu.box.add(memLabel);
 
-            
             this._eventLoop = Mainloop.timeout_add(1000, Lang.bind(this, function (){
                 updateDisplay();
                 return true;
@@ -344,6 +352,17 @@ function _getWeather() {
     // log("forecast:", JSON.stringify(forecast));
     
     return(forecast[0]);
+}
+
+function getCurrentBatteryInfo() {
+	let batInfo;
+	let power = Main.panel.statusArea["aggregateMenu"]._power;
+	if(power._proxy.IsPresent){
+		batInfo.set_text("%d%%".format(power._proxy.Percentage));
+		return batInfo;
+	}else{
+		return "Unavailable";
+	}
 }
 
 function _countUpdated() {
