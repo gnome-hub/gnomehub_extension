@@ -32,7 +32,7 @@ const Dropdown = GObject.registerClass(
     class Dropdown extends PanelMenu.Button {
         _init() {
             super._init(0.0, 'gnome-hub');
-            log("gnomehub: in indicator")
+            // log("gnomehub: in indicator")
 
             // can choose between icon or label
             this._label = new St.Label({
@@ -295,7 +295,7 @@ function updateMessageFile() {
 function getNotifications() {
     // log("File name: "+fname)
     let file = Gio.file_new_for_path(fname);
-    let notifs = [];
+    let notifs = ["test"];
 
     try {
         const fileInputStream = file.read(null);
@@ -327,22 +327,10 @@ function getNotifications() {
 
 function _getWeather() {
     let forecast = [];
-    // await _getWeatherUri().then(uri => {
-    //     let sessionSync = new Soup.SessionSync();
-    //     let msg = Soup.Message.new('GET', uri);
-    //     msg.request_headers.append("User-Agent", "Stackoverflow/1.0");
-    //     sessionSync.send_message(msg);
-    //     let response = JSON.parse(msg.response_body.data);
-    //     forecast = {
-    //         "name": response["properties"]["periods"][0]["name"],
-    //         "temperature": response["properties"]["periods"][0]["temperature"],
-    //         "detailedForecast": response["properties"]["periods"][0]["detailedForecast"],
-    //     };
-    // });
 
     let sessionSync = new Soup.SessionSync();
     let msg = Soup.Message.new('GET', 'https://api.weather.gov/gridpoints/IWX/29,63/forecast');
-    msg.request_headers.append("User-Agent", "Stackoverflow/1.0");
+    msg.request_headers.append("User-Agent", "gnomehub/1.0");
     sessionSync.send_message(msg);
     let response = JSON.parse(msg.response_body.data);
     for(var index = 0; index < 5; index++){
@@ -353,20 +341,9 @@ function _getWeather() {
             "temperatureUnit": response["properties"]["periods"][index]["temperatureUnit"],
         });
     }
-    log("forecast:", JSON.stringify(forecast));
+    // log("forecast:", JSON.stringify(forecast));
     
     return(forecast[0]);
-}
-
-function _getWeatherUri(){
-    let sessionSync = new Soup.SessionSync();
-    let msg = Soup.Message.new('GET', 'https://api.weather.gov/points/41.7003,-86.2386');
-    msg.request_headers.append("User-Agent", "Stackoverflow/1.0");
-    sessionSync.send_message(msg);
-    let response = JSON.parse(msg.response_body.data);
-    let uri = JSON.stringify(response["properties"]["forecast"])
-    log("uri:", uri);
-    return(uri);
 }
 
 function _countUpdated() {
@@ -390,7 +367,7 @@ class Extension {
         try {
             file.delete(null); //TODO: check if there is a file- if not no need to delete
         } catch (e) {
-            log("no log file already stored")
+            // log("no log file already stored")
         }
         file.create(Gio.FileCreateFlags.NONE, null);
 
@@ -403,17 +380,18 @@ class Extension {
     }
 
     disable() {
-        this.indicator = null;
+        MessageTray.Source.prototype.countUpdated = originalCountUpdated;
+        this.indicator.destroy();
         Main.panel._rightBox.remove_child(button);
     }
 
-    _refresh_monitor() {
-        let notifications = getNotifications();
-        log("Got:")
-        log(notifications)
+    // _refresh_monitor() {
+    //     let notifications = getNotifications();
+    //     // log("Got:")
+    //     // log(notifications)
 
-        return GLib.SOURCE_CONTINUE;
-    }
+    //     return GLib.SOURCE_CONTINUE;
+    // }
 }
 
 
