@@ -10,9 +10,6 @@ const MessageTray = imports.ui.messageTray;
 const Mainloop = imports.mainloop;
 const ByteArray = imports.byteArray;
 
-// const Mainloop = imports.mainloop;
-const Lang = imports.lang;
-
 const Tweener = imports.ui.tweener;
 
 let text, button;
@@ -27,6 +24,10 @@ var lastCPUTotal;
 var lastCPUUsed;
 
 var weatherCurrent = false;
+
+
+const millisRefreshInterval = 500;
+
 
 const Dropdown = GObject.registerClass(
     class Dropdown extends PanelMenu.Button {
@@ -58,7 +59,8 @@ const Dropdown = GObject.registerClass(
 
             // update information
             function updateDisplay() {
-                let notifications = getNotifications();
+                // let notifications = getNotifications();
+                let notifications = getGroupedNotifications();
                 // log(notifications.length)
                 let i = 0;
                 while (i < 10 && i < notifications.length) {
@@ -109,18 +111,23 @@ const Dropdown = GObject.registerClass(
             }));
             */
 
-            returnedForecast = _getWeather();
-            weatherText = returnedForecast['name']+":"+returnedForecast['temperature']+returnedForecast['temperatureUnit'];
-            var weatherWidgetE = new PopupMenu.PopupMenuItem(weatherText);
+            try {
+                returnedForecast = _getWeather();
+                weatherText = returnedForecast['name']+":"+returnedForecast['temperature']+returnedForecast['temperatureUnit'];
+                var weatherWidgetE = new PopupMenu.PopupMenuItem(weatherText);
 
             /*for(var weatherIndex = 0; weatherIndex < 5; weatherIndex++){
             var weatherText = new PopupMenu.PopupMenuItem('Forecast for ' + returnedForecast[weatherIndex]['name'] + ' in South Bend, IN:\n' + returnedForecast[weatherIndex]['detailedForecast']);
             weatherWidget.menu.addMenuItem(weatherText);
             }*/
             this.menu.addMenuItem(weatherWidgetE);
+            }
+            catch (e) {
+                log("error loading weather for weather widget")
+            }
             /* end of weather widget */
-            /* end of widget section */
 
+            /* end of widget section */
             // add divider between sections
             this.menu.addMenuItem( new PopupMenu.PopupSeparatorMenuItem(''));
 	    
@@ -136,10 +143,14 @@ const Dropdown = GObject.registerClass(
             this.menu.box.add(memLabel);
 
             
-            this._eventLoop = Mainloop.timeout_add(1000, Lang.bind(this, function (){
+            // this._eventLoop = Mainloop.timeout_add(1000, Lang.bind(this, function (){
+            //     updateDisplay();
+            //     return true;
+            // }))
+            this._eventLoop = Mainloop.timeout_add(millisRefreshInterval, () => {
                 updateDisplay();
                 return true;
-            }))
+            })
         }
 
         // setText(text) {
@@ -292,10 +303,63 @@ function updateMessageFile() {
        fstream.close(null);
 }
 
+function getGroupedNotifications() {
+    updateMessageFile()
+    log("Gnomehub: in groupednotifications")
+    let file = Gio.file_new_for_path(fname);
+    let notifGroups = {};
+    let notifs = [];
+
+    try {
+        const fileInputStream = file.read(null);
+        const dataInputStream = new Gio.DataInputStream({
+            'base_stream' : fileInputStream
+        });
+        var line;
+
+        while (([line, length] = dataInputStream.read_line(null)) && line != null) {
+            if (line instanceof Uint8Array) {
+                line = ByteArray.toString(line).trim();
+            }
+            else {
+                line = line.toString().trim();
+            }
+            let [sender, notification] = line.split(" — ")
+            if ("sender" in notifGroups) {
+                notifGroups[sender].unshift(notification)
+            }
+            else {
+                notifGroups[sender] = []
+                notifGroups[sender].unshift(notification)
+            }
+
+            if (notifs.length > 10) {
+                break;
+            }
+        }
+
+    } catch (e) {
+        logError(e);
+    }
+
+    for (var key in notifGroups) {
+        // log("gnomehub most recent "+key+" notification: "+notifGroups[key][0])
+        if (notifGroups[key][0]) {
+            notifs.unshift(notifGroups[key][0])
+        } 
+        else {
+            notifs.unshift("No subtext")
+        }
+        // log("gnomehub: "+key+": "+notifGroups[key])
+    }
+
+    return notifs
+}
+
 function getNotifications() {
     // log("File name: "+fname)
     let file = Gio.file_new_for_path(fname);
-    let notifs = ["test"];
+    let notifs = [];
 
     try {
         const fileInputStream = file.read(null);
