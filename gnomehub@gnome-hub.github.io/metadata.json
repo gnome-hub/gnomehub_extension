@@ -3,7 +3,6 @@
     "name": "gnomehub",
     "description": "An all in one extension which catagorizes notifications and displays system information",
     "version": 1,
-    "shell-version": [ "3.38", "40", "41.alpha" ],
-    "url": "https://gnome-hub.github.io/",
-    "session-modes":  [ "unlock-dialog", "user" ]
+    "shell-version": [ "3.38", "40" ],
+    "url": "https://gnome-hub.github.io/"
 }
