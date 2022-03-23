@@ -135,7 +135,16 @@ const Dropdown = GObject.registerClass(
             this.menu.box.add(cpuLabel);
             this.menu.box.add(memLabel);
 
-            
+	    /* showApps button section */
+	    // add divider between sections
+            this.menu.addMenuItem( new PopupMenu.PopupSeparatorMenuItem(''));
+
+	    let appsButton = new PopupMenu.PopupMenuItem('Show Apps');
+	    appsButton.connect('button-press-event', () => {
+		    showApps();
+	    });
+            this.menu.addMenuItem(appsButton);
+
             this._eventLoop = Mainloop.timeout_add(1000, Lang.bind(this, function (){
                 updateDisplay();
                 return true;
@@ -353,6 +362,14 @@ function _countUpdated() {
     } 
     iteration = iteration + 1;
     return res;
+}
+
+function showApps(){
+	if(Main.overview.visible){
+		Main.overview.toggle();
+	} else {
+		Main.overview.viewSelector.showApps();
+	}
 }
 
 class Extension {
