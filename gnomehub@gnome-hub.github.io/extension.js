@@ -33,18 +33,20 @@ const Dropdown = GObject.registerClass(
         _init() {
             super._init(0.0, 'gnome-hub');
             // log("gnomehub: in indicator")
-
+            let box = new St.BoxLayout({style_class:'extensionBox'});
             // can choose between icon or label
             this._label = new St.Label({
                 'y_align' : Clutter.ActorAlign.CENTER,
                 'text': 'Hub',
                 'style_class': 'label'
             });
+            box.add(this._label);
+            box.add(PopupMenu.arrowIcon(St.Side.BOTTOM));
+            this.actor.add_child(box);
 
             // declare variables
-            let box = new St.BoxLayout({ style_class: 'panel-status-menu-box' });
-            let systemBox = new St.BoxLayout({ style_class: 'panel-status-menu-box' });
-            let notiftitlebox = new St.BoxLayout({ height: 25.0, style_class: 'popup-status-menu-box' });
+            // let systemBox = new St.BoxLayout({ style_class: 'panel-status-menu-box' });
+            // let notiftitlebox = new St.BoxLayout({style_class: 'testclass'})
             let notifboxes = new Array(10);
             let notifLabels = new Array(10);
             // let cpuLabel = new St.Label({text: '----', x_expand: true, x_align: Clutter.ActorAlign.START, y_expand=true});
@@ -52,8 +54,13 @@ const Dropdown = GObject.registerClass(
             let memLabel = new St.Label({text: '----', x_expand: true, x_align: Clutter.ActorAlign.CENTER});
 
             for (let i = 0; i < 10; i++) {
-                notifboxes[i] = new St.BoxLayout({ height: 25.0, style_class: 'popup-status-menu-box' });
-                notifLabels[i] = new St.Label({text: '----', x_expand: true, x_align: Clutter.ActorAlign.START, translation_x: 2.0});
+                notifboxes[i] = new St.BoxLayout({style_class: 'notificationBox' });
+                notifLabels[i] = new St.Label({
+                    text: '----', 
+                    x_expand: true, 
+                    x_align: Clutter.ActorAlign.START, 
+                    y_align: Clutter.ActorAlign.CENTER,
+                    translation_x: 2.0});
             }
 
             // update information
@@ -85,9 +92,8 @@ const Dropdown = GObject.registerClass(
             // notifications section 
             this.menu.addMenuItem( new PopupMenu.PopupSeparatorMenuItem('Notifications'));
 
-            box.add_child(this._label);
             this.add_child(box);
-            this.menu.box.add(notiftitlebox);
+            // this.menu.box.add(notiftitlebox);
             for (let i = 0; i < 10; i++) {
                 notifboxes[i].add(notifLabels[i]);
                 this.menu.box.add(notifboxes[i]);
@@ -111,13 +117,24 @@ const Dropdown = GObject.registerClass(
 
             returnedForecast = _getWeather();
             weatherText = returnedForecast['name']+":"+returnedForecast['temperature']+returnedForecast['temperatureUnit'];
-            var weatherWidgetE = new PopupMenu.PopupMenuItem(weatherText);
+            //var weatherWidgetE = new PopupMenu.PopupMenuItem(weatherText);
+            let weatherWidgetE = new St.BoxLayout({
+                style_class: 'weatherWidget'
+            });
+            let weatherWidgetLabel = new St.Label({
+                text: weatherText, 
+                x_expand: true, 
+                x_align: Clutter.ActorAlign.START, 
+                y_align: Clutter.ActorAlign.CENTER,
+                translation_x: 2.0
+            });
+            weatherWidgetE.add(weatherWidgetLabel);
 
             /*for(var weatherIndex = 0; weatherIndex < 5; weatherIndex++){
             var weatherText = new PopupMenu.PopupMenuItem('Forecast for ' + returnedForecast[weatherIndex]['name'] + ' in South Bend, IN:\n' + returnedForecast[weatherIndex]['detailedForecast']);
             weatherWidget.menu.addMenuItem(weatherText);
             }*/
-            this.menu.addMenuItem(weatherWidgetE);
+            this.menu.box.add(weatherWidgetE);
             /* end of weather widget */
             /* end of widget section */
 

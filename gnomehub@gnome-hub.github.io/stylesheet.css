@@ -1,5 +1,28 @@
 /* Add your custom extension styling here */
-.weatherWidget {
-   padding: 8px 8px 10px 20px;
-   spacing: 6px
+.extensionBox {
+   font-style: normal;
+}
+.notificationBox{
+   border: width 1px; 
+   border-color:grey;
+   border-radius: 5px;
+   background-color: white;
+   margin: 5px;
+   width: 500px;
+   height: 50px;
+   padding: 5px;
+}
+.weatherWidget{
+   border: width 1px; 
+   border-color:grey;
+   border-radius: 5px;
+   background-color: white;
+   margin: 5px;
+   max-width: 240px;
+   height: 100px;
+   padding: 5px;
+}
+.testclass{
+   background-color: blue;
+   height: 100px;
 }
