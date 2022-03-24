@@ -25,8 +25,14 @@ var lastCPUUsed;
 
 var weatherCurrent = false;
 
-
+// the following constants should be accesible to the user in a menu interface
 const millisRefreshInterval = 500;
+const maxWidth = 500;
+const textOffset = 20.0;
+
+// notification modes: 0 = raw notifications
+//                     1 = 
+//                     2 = dropdown menu style
 
 
 const Dropdown = GObject.registerClass(
@@ -49,12 +55,12 @@ const Dropdown = GObject.registerClass(
             let notifboxes = new Array(10);
             let notifLabels = new Array(10);
             // let cpuLabel = new St.Label({text: '----', x_expand: true, x_align: Clutter.ActorAlign.START, y_expand=true});
-            let cpuLabel = new St.Label({text: '----', x_expand: true, x_align: Clutter.ActorAlign.CENTER});
-            let memLabel = new St.Label({text: '----', x_expand: true, x_align: Clutter.ActorAlign.CENTER});
+            let cpuLabel = new St.Label({text: '----', x_expand: true, x_align: Clutter.ActorAlign.START, translation_x: textOffset});
+            let memLabel = new St.Label({text: '----', x_expand: true, x_align: Clutter.ActorAlign.START, translation_x: textOffset});
 
             for (let i = 0; i < 10; i++) {
                 notifboxes[i] = new St.BoxLayout({ height: 25.0, style_class: 'popup-status-menu-box' });
-                notifLabels[i] = new St.Label({text: '----', x_expand: true, x_align: Clutter.ActorAlign.START, translation_x: 2.0});
+                notifLabels[i] = new St.Label({text: '----', width: maxWidth, y_expand: true, x_expand: false, x_align: Clutter.ActorAlign.START, translation_x: textOffset});
             }
 
             // update information
@@ -305,7 +311,7 @@ function updateMessageFile() {
 
 function getGroupedNotifications() {
     updateMessageFile()
-    log("Gnomehub: in groupednotifications")
+    // log("Gnomehub: in groupednotifications")
     let file = Gio.file_new_for_path(fname);
     let notifGroups = {};
     let notifs = [];
@@ -445,7 +451,7 @@ class Extension {
 
     disable() {
         MessageTray.Source.prototype.countUpdated = originalCountUpdated;
-        this.indicator.destroy();
+        // this.indicator.destroy();
         Main.panel._rightBox.remove_child(button);
     }
 
