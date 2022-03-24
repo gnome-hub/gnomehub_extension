@@ -10,9 +10,6 @@ const MessageTray = imports.ui.messageTray;
 const Mainloop = imports.mainloop;
 const ByteArray = imports.byteArray;
 
-// const Mainloop = imports.mainloop;
-const Lang = imports.lang;
-
 const Tweener = imports.ui.tweener;
 
 let text, button;
@@ -27,6 +24,17 @@ var lastCPUTotal;
 var lastCPUUsed;
 
 var weatherCurrent = false;
+
+// the following constants should be accesible to the user in a menu interface
+const millisRefreshInterval = 1000;
+const maxWidth = 500;
+const textOffset = 20.0;
+
+// notification modes: 0 = raw notifications
+//                     1 = grouped mode
+//                     2 = dropdown menu style // unimplemented
+const notificationMode = 1;
+
 
 const Dropdown = GObject.registerClass(
     class Dropdown extends PanelMenu.Button {
@@ -48,17 +56,24 @@ const Dropdown = GObject.registerClass(
             let notifboxes = new Array(10);
             let notifLabels = new Array(10);
             // let cpuLabel = new St.Label({text: '----', x_expand: true, x_align: Clutter.ActorAlign.START, y_expand=true});
-            let cpuLabel = new St.Label({text: '----', x_expand: true, x_align: Clutter.ActorAlign.CENTER});
-            let memLabel = new St.Label({text: '----', x_expand: true, x_align: Clutter.ActorAlign.CENTER});
+            let cpuLabel = new St.Label({text: '----', x_expand: true, x_align: Clutter.ActorAlign.START, translation_x: textOffset});
+            let memLabel = new St.Label({text: '----', x_expand: true, x_align: Clutter.ActorAlign.START, translation_x: textOffset});
 
             for (let i = 0; i < 10; i++) {
                 notifboxes[i] = new St.BoxLayout({ height: 25.0, style_class: 'popup-status-menu-box' });
-                notifLabels[i] = new St.Label({text: '----', x_expand: true, x_align: Clutter.ActorAlign.START, translation_x: 2.0});
+                notifLabels[i] = new St.Label({text: '----', width: maxWidth, y_expand: true, x_expand: false, x_align: Clutter.ActorAlign.START, translation_x: textOffset});
             }
 
             // update information
             function updateDisplay() {
-                let notifications = getNotifications();
+                let notifications = [];
+                if (notificationMode == 0) {
+                    notifications = getNotifications();
+                }
+                else if (notificationMode == 1) {
+                    notifications = getGroupedNotifications();
+                }
+
                 // log(notifications.length)
                 let i = 0;
                 while (i < 10 && i < notifications.length) {
@@ -109,18 +124,23 @@ const Dropdown = GObject.registerClass(
             }));
             */
 
-            returnedForecast = _getWeather();
-            weatherText = returnedForecast['name']+":"+returnedForecast['temperature']+returnedForecast['temperatureUnit'];
-            var weatherWidgetE = new PopupMenu.PopupMenuItem(weatherText);
+            try {
+                returnedForecast = _getWeather();
+                weatherText = returnedForecast['name']+":"+returnedForecast['temperature']+returnedForecast['temperatureUnit'];
+                var weatherWidgetE = new PopupMenu.PopupMenuItem(weatherText);
 
             /*for(var weatherIndex = 0; weatherIndex < 5; weatherIndex++){
             var weatherText = new PopupMenu.PopupMenuItem('Forecast for ' + returnedForecast[weatherIndex]['name'] + ' in South Bend, IN:\n' + returnedForecast[weatherIndex]['detailedForecast']);
             weatherWidget.menu.addMenuItem(weatherText);
             }*/
             this.menu.addMenuItem(weatherWidgetE);
+            }
+            catch (e) {
+                log("error loading weather for weather widget")
+            }
             /* end of weather widget */
-            /* end of widget section */
 
+            /* end of widget section */
             // add divider between sections
             this.menu.addMenuItem( new PopupMenu.PopupSeparatorMenuItem(''));
 	    
@@ -136,10 +156,14 @@ const Dropdown = GObject.registerClass(
             this.menu.box.add(memLabel);
 
             
-            this._eventLoop = Mainloop.timeout_add(1000, Lang.bind(this, function (){
+            // this._eventLoop = Mainloop.timeout_add(1000, Lang.bind(this, function (){
+            //     updateDisplay();
+            //     return true;
+            // }))
+            this._eventLoop = Mainloop.timeout_add(millisRefreshInterval, () => {
                 updateDisplay();
                 return true;
-            }))
+            })
         }
 
         // setText(text) {
@@ -156,6 +180,7 @@ const Dropdown = GObject.registerClass(
     }
 )
 
+// TODO: return this as a nice percent string instead of a decimal
 const getCurrentCPUUsage = () => {
     let currentCPUUsage = 0;
 
@@ -210,6 +235,7 @@ const getCurrentCPUUsage = () => {
     return currentCPUUsage;
 }
 
+// TODO: return this as a nice percent string instead of a decimal
 const getCurrentMemoryUsage = () => {
     let currentMemoryUsage = 0;
 
@@ -267,35 +293,122 @@ const getCurrentMemoryUsage = () => {
 }
 
 function updateMessageFile() {
-       let sources = Main.messageTray.getSources();
-       // log("XDG_RUNTIME_DIR") // TODO: use xdg/gnomehub
-       let file = Gio.file_new_for_path(fname);
-       let fstream = file.append_to(Gio.FileCreateFlags.NONE, null);
+    let sources = Main.messageTray.getSources();
+    // log("XDG_RUNTIME_DIR") // TODO: use xdg/gnomehub
+    let file = Gio.file_new_for_path(fname);
+    let fstream = file.append_to(Gio.FileCreateFlags.NONE, null);
 
-       for (let i = 0; i < sources.length; i++) {
-               for (let n = 0; n < sources[i].notifications.length; n++) {
-                        let notif = sources[i].notifications[n];
-                        let urg = "" + notif.urgency;
-                        if (notif.urgency == 0) {
-                            urg = "L"
-                        } else if (notif.urgency == 1) {
-                            urg = "N"
-                        } else if (notif.urgency == 3) {
-                            urg = "C"
-                        }
-                           // let data = urg + " " + notif.title + " — " + notif.bannerBodyText;
-                           let data = notif.title + " — " + notif.bannerBodyText;
-                           data = data.replace("\\", "\\\\").replace("\n", "\\n") + "\n"
-                           fstream.write(data, null);
-                       }
-              }
-       fstream.close(null);
+    // read from file
+    let contents = [];
+    try {
+        const fileInputStream = file.read(null);
+        const dataInputStream = new Gio.DataInputStream({
+            'base_stream' : fileInputStream
+        });
+        var line;
+
+        while (([line, length] = dataInputStream.read_line(null)) && line != null) {
+            if (line instanceof Uint8Array) {
+                line = ByteArray.toString(line).trim();
+            }
+            else {
+                line = line.toString().trim();
+            }
+            contents.push(line)
+        }
+
+    } catch (e) {
+        logError(e);
+    }
+    log(contents)
+    
+    
+    // write things to file if not already written
+    for (let i = 0; i < sources.length; i++) {
+        for (let n = 0; n < sources[i].notifications.length; n++) {
+            let notif = sources[i].notifications[n];
+            let urg = "" + notif.urgency;
+            if (notif.urgency == 0) {
+                urg = "L"
+            } else if (notif.urgency == 1) {
+                urg = "N"
+            } else if (notif.urgency == 3) {
+                urg = "C"
+            }
+            // let data = urg + " " + notif.title + " — " + notif.bannerBodyText;
+            let data = notif.title + " — " + notif.bannerBodyText;
+            data = data.replace("\n"," ");
+            log("READ: "+data)
+            if (contents.includes(data)) {
+                continue;
+            }
+            else {
+                data = data.replace("\\", "\\\\").replace("\n", "\\n") + "\n"
+                // data = data.replace("\\", "\\\\") + "\n"
+                fstream.write(data, null);
+            }
+        }
+    }
+    fstream.close(null);
+}
+
+function getGroupedNotifications() {
+    updateMessageFile()
+    // log("Gnomehub: in groupednotifications")
+    let file = Gio.file_new_for_path(fname);
+    let notifGroups = {};
+    let notifs = [];
+
+    try {
+        const fileInputStream = file.read(null);
+        const dataInputStream = new Gio.DataInputStream({
+            'base_stream' : fileInputStream
+        });
+        var line;
+
+        while (([line, length] = dataInputStream.read_line(null)) && line != null) {
+            if (line instanceof Uint8Array) {
+                line = ByteArray.toString(line).trim();
+            }
+            else {
+                line = line.toString().trim();
+            }
+            let [sender, notification] = line.split(" — ")
+            if ("sender" in notifGroups) {
+                notifGroups[sender].unshift(notification)
+            }
+            else {
+                notifGroups[sender] = []
+                notifGroups[sender].unshift(notification)
+            }
+
+            if (notifs.length > 10) {
+                break;
+            }
+        }
+
+    } catch (e) {
+        logError(e);
+    }
+
+    for (var key in notifGroups) {
+        // log("gnomehub most recent "+key+" notification: "+notifGroups[key][0])
+        if (notifGroups[key][0]) {
+            notifs.unshift(notifGroups[key][0])
+        } 
+        else {
+            notifs.unshift("No subtext")
+        }
+        // log("gnomehub: "+key+": "+notifGroups[key])
+    }
+
+    return notifs
 }
 
 function getNotifications() {
     // log("File name: "+fname)
     let file = Gio.file_new_for_path(fname);
-    let notifs = ["test"];
+    let notifs = [];
 
     try {
         const fileInputStream = file.read(null);
@@ -381,7 +494,7 @@ class Extension {
 
     disable() {
         MessageTray.Source.prototype.countUpdated = originalCountUpdated;
-        this.indicator.destroy();
+        // this.indicator.destroy();
         Main.panel._rightBox.remove_child(button);
     }
 
