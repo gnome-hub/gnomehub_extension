@@ -26,13 +26,14 @@ var lastCPUUsed;
 var weatherCurrent = false;
 
 // the following constants should be accesible to the user in a menu interface
-const millisRefreshInterval = 500;
+const millisRefreshInterval = 1000;
 const maxWidth = 500;
 const textOffset = 20.0;
 
 // notification modes: 0 = raw notifications
-//                     1 = 
-//                     2 = dropdown menu style
+//                     1 = grouped mode
+//                     2 = dropdown menu style // unimplemented
+const notificationMode = 1;
 
 
 const Dropdown = GObject.registerClass(
@@ -65,8 +66,14 @@ const Dropdown = GObject.registerClass(
 
             // update information
             function updateDisplay() {
-                // let notifications = getNotifications();
-                let notifications = getGroupedNotifications();
+                let notifications = [];
+                if (notificationMode == 0) {
+                    notifications = getNotifications();
+                }
+                else if (notificationMode == 1) {
+                    notifications = getGroupedNotifications();
+                }
+
                 // log(notifications.length)
                 let i = 0;
                 while (i < 10 && i < notifications.length) {
@@ -173,6 +180,7 @@ const Dropdown = GObject.registerClass(
     }
 )
 
+// TODO: return this as a nice percent string instead of a decimal
 const getCurrentCPUUsage = () => {
     let currentCPUUsage = 0;
 
@@ -227,6 +235,7 @@ const getCurrentCPUUsage = () => {
     return currentCPUUsage;
 }
 
+// TODO: return this as a nice percent string instead of a decimal
 const getCurrentMemoryUsage = () => {
     let currentMemoryUsage = 0;
 
@@ -284,29 +293,63 @@ const getCurrentMemoryUsage = () => {
 }
 
 function updateMessageFile() {
-       let sources = Main.messageTray.getSources();
-       // log("XDG_RUNTIME_DIR") // TODO: use xdg/gnomehub
-       let file = Gio.file_new_for_path(fname);
-       let fstream = file.append_to(Gio.FileCreateFlags.NONE, null);
+    let sources = Main.messageTray.getSources();
+    // log("XDG_RUNTIME_DIR") // TODO: use xdg/gnomehub
+    let file = Gio.file_new_for_path(fname);
+    let fstream = file.append_to(Gio.FileCreateFlags.NONE, null);
 
-       for (let i = 0; i < sources.length; i++) {
-               for (let n = 0; n < sources[i].notifications.length; n++) {
-                        let notif = sources[i].notifications[n];
-                        let urg = "" + notif.urgency;
-                        if (notif.urgency == 0) {
-                            urg = "L"
-                        } else if (notif.urgency == 1) {
-                            urg = "N"
-                        } else if (notif.urgency == 3) {
-                            urg = "C"
-                        }
-                           // let data = urg + " " + notif.title + " — " + notif.bannerBodyText;
-                           let data = notif.title + " — " + notif.bannerBodyText;
-                           data = data.replace("\\", "\\\\").replace("\n", "\\n") + "\n"
-                           fstream.write(data, null);
-                       }
-              }
-       fstream.close(null);
+    // read from file
+    let contents = [];
+    try {
+        const fileInputStream = file.read(null);
+        const dataInputStream = new Gio.DataInputStream({
+            'base_stream' : fileInputStream
+        });
+        var line;
+
+        while (([line, length] = dataInputStream.read_line(null)) && line != null) {
+            if (line instanceof Uint8Array) {
+                line = ByteArray.toString(line).trim();
+            }
+            else {
+                line = line.toString().trim();
+            }
+            contents.push(line)
+        }
+
+    } catch (e) {
+        logError(e);
+    }
+    log(contents)
+    
+    
+    // write things to file if not already written
+    for (let i = 0; i < sources.length; i++) {
+        for (let n = 0; n < sources[i].notifications.length; n++) {
+            let notif = sources[i].notifications[n];
+            let urg = "" + notif.urgency;
+            if (notif.urgency == 0) {
+                urg = "L"
+            } else if (notif.urgency == 1) {
+                urg = "N"
+            } else if (notif.urgency == 3) {
+                urg = "C"
+            }
+            // let data = urg + " " + notif.title + " — " + notif.bannerBodyText;
+            let data = notif.title + " — " + notif.bannerBodyText;
+            data = data.replace("\n"," ");
+            log("READ: "+data)
+            if (contents.includes(data)) {
+                continue;
+            }
+            else {
+                data = data.replace("\\", "\\\\").replace("\n", "\\n") + "\n"
+                // data = data.replace("\\", "\\\\") + "\n"
+                fstream.write(data, null);
+            }
+        }
+    }
+    fstream.close(null);
 }
 
 function getGroupedNotifications() {
