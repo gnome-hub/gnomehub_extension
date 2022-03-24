@@ -16,11 +16,36 @@
    border: width 1px; 
    border-color:grey;
    border-radius: 5px;
-   background-color: white;
+   background-color: royalblue;
    margin: 5px;
-   max-width: 240px;
+   max-width: 500px;
    height: 100px;
    padding: 5px;
+}
+.weatherWidgetInfo{
+   border: width 1px; 
+   /*border-color:grey;*/
+   border-radius: 5px;
+   background-color:cornflowerblue;
+   margin: 5px;
+   max-width: 370px;
+   height: 100px;
+   padding: 5px;
+   flex-direction: column;
+   color:white;
+   word-break: break-all;
+}
+.weatherWidgetIcon{
+   background-color:cornflowerblue;
+   border-radius: 5px;
+   margin: 5px;
+}
+.weatherTemperatureText{
+   font-size: xx-large;
+}
+.weatherDescriptionText{
+   font-size:small;
+   font-style: oblique;
 }
 .testclass{
    background-color: blue;

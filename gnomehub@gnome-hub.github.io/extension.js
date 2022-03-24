@@ -106,7 +106,6 @@ const Dropdown = GObject.registerClass(
             /* weather widget --> simplified */
 
             //var weatherWidget = new PopupMenu.PopupSubMenuMenuItem('Weather');
-            var weatherText = "";
             /* TODO get API to constantly update using loop below */
             /*this.timer = Mainloop.timeout_add_seconds(30, Lang.bind(this, function() {
             log("Updating Weather");
@@ -116,19 +115,42 @@ const Dropdown = GObject.registerClass(
             */
 
             returnedForecast = _getWeather();
-            weatherText = returnedForecast['name']+":"+returnedForecast['temperature']+returnedForecast['temperatureUnit'];
+            let weatherText = returnedForecast['temperature']+"°"+returnedForecast['temperatureUnit'];
             //var weatherWidgetE = new PopupMenu.PopupMenuItem(weatherText);
             let weatherWidgetE = new St.BoxLayout({
                 style_class: 'weatherWidget'
             });
+            let weatherWidgetInfo = new St.BoxLayout({
+                style_class: 'weatherWidgetInfo',
+                vertical: true,
+            })
             let weatherWidgetLabel = new St.Label({
                 text: weatherText, 
                 x_expand: true, 
                 x_align: Clutter.ActorAlign.START, 
-                y_align: Clutter.ActorAlign.CENTER,
-                translation_x: 2.0
+                y_align: Clutter.ActorAlign.START,
+                translation_x: 2.0,
+                style_class: 'weatherTemperatureText'
             });
-            weatherWidgetE.add(weatherWidgetLabel);
+            let weatherWidgetDescription = new St.Label({
+                text: returnedForecast['detailedForecast'], 
+                x_expand: true, 
+                x_align: Clutter.ActorAlign.START, 
+                y_align: Clutter.ActorAlign.END,
+                translation_x: 2.0,
+                style_class: 'weatherDescriptionText',
+            });
+            weatherWidgetInfo.add(weatherWidgetLabel);
+            weatherWidgetInfo.add(weatherWidgetDescription);
+            let weatherWidgetPicture = new St.Icon({
+                style_class: 'weatherWidgetIcon',
+                icon_size: 90
+            });
+            let url = returnedForecast['icon'];
+            let gicon = Gio.icon_new_for_string(url);
+            weatherWidgetPicture.set_gicon(gicon);
+            weatherWidgetE.add(weatherWidgetInfo);
+            weatherWidgetE.add(weatherWidgetPicture);
 
             /*for(var weatherIndex = 0; weatherIndex < 5; weatherIndex++){
             var weatherText = new PopupMenu.PopupMenuItem('Forecast for ' + returnedForecast[weatherIndex]['name'] + ' in South Bend, IN:\n' + returnedForecast[weatherIndex]['detailedForecast']);
@@ -356,6 +378,7 @@ function _getWeather() {
             "temperature": response["properties"]["periods"][index]["temperature"],
             "detailedForecast": response["properties"]["periods"][index]["detailedForecast"],
             "temperatureUnit": response["properties"]["periods"][index]["temperatureUnit"],
+            "icon": response["properties"]["periods"][index]["icon"],
         });
     }
     // log("forecast:", JSON.stringify(forecast));
