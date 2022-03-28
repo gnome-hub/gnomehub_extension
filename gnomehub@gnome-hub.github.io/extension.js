@@ -20,9 +20,10 @@ let indicator, uuid;
 
 let fname = GLib.getenv("XDG_RUNTIME_DIR") + "/notifications";
 
+/* edit these values to customise the extension */
 var lastCPUTotal;
 var lastCPUUsed;
-
+var numnotifications = 10; // change the max number of notifications to be displayed
 var weatherCurrent = false;
 
 // the following constants should be accesible to the user in a menu interface
@@ -55,13 +56,13 @@ const Dropdown = GObject.registerClass(
             // declare variables
             // let systemBox = new St.BoxLayout({ style_class: 'panel-status-menu-box' });
             // let notiftitlebox = new St.BoxLayout({style_class: 'testclass'})
-            let notifboxes = new Array(10);
-            let notifLabels = new Array(10);
+            let notifboxes = new Array(numnotifications);
+            let notifLabels = new Array(numnotifications);
             // let cpuLabel = new St.Label({text: '----', x_expand: true, x_align: Clutter.ActorAlign.START, y_expand=true});
             let cpuLabel = new St.Label({text: '----', x_expand: true, x_align: Clutter.ActorAlign.START, translation_x: textOffset});
             let memLabel = new St.Label({text: '----', x_expand: true, x_align: Clutter.ActorAlign.START, translation_x: textOffset});
 
-            for (let i = 0; i < 10; i++) {
+            for (let i = 0; i < numnotifications; i++) {
                 notifboxes[i] = new St.BoxLayout({style_class: 'notificationBox' });
                 notifLabels[i] = new St.Label({
                     text: '----', 
@@ -115,7 +116,7 @@ const Dropdown = GObject.registerClass(
             }
 
             // add divider between sections
-            this.menu.addMenuItem( new PopupMenu.PopupSeparatorMenuItem('Weather'));
+            this.menu.addMenuItem( new PopupMenu.PopupSeparatorMenuItem('Widgets'));
             /* widget section */
             //let WidgetMenuTitle = new PopupMenu.PopupMenuItem
             /* weather widget --> simplified */
