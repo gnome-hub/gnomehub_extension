@@ -29,9 +29,26 @@ JOIN OUR [DISCORD](https://discord.gg/9cHcHyf5e6) to become a part of our commun
 - System Statistics
   * Custom statistics for your system including CPU usage & Memory usage 
 
-# Setup Instructions
+# Installation Guide
 ## Method 1 - Download directly from the Gnome Extension Store
-This extension is still a work in progress and we plan to have our first prototype out on the store within a month!
+> Step 1 - Finding the extension on the store
+>
+> 1.Go to our extension on the [Gnome Store](https://extensions.gnome.org/extension/4913/gnomehub/)
+> <img src="https://i.ibb.co/rvxJnWn/Screen-Shot-2022-03-24-at-5-03-34-PM.png">
+> 2. Next to `Download` select your Gnome Shell version 
+> 2-1. If you dont know your gnome shell version, run `gnome-shell --version` on your linux desktop terminal and find out!
+> 3.In the top right,`TOGGLE` your extension to be ON/OFF
+> 4. Once done, move to Step 2
+
+> Step 2 - Confirming & Checking for bugs
+> 
+> 1. Once installed, you should see `Hub` in your desktop navigation bar (top bar)
+> 2. If not, please let us know on our [Discord](https://discord.gg/9cHcHyf5e6) / [GitHub](https://github.com/gnome-hub) and we will look into fixing the bug for you!
+> 3. You should be all set! move to Step 3
+
+>Step 3 - Reviewing our project
+>
+>Thank you for installing our extension. We are a young and constantly developing extension. Please leave us a review and let us know if you find a bug! We would love for you to join our community. You can find us on [Discord](https://discord.gg/9cHcHyf5e6)
 
 ## Method 2 - Cloning from Github
 > Step 1 - Setting up your terminal:
