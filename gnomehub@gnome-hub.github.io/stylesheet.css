@@ -1,5 +1,54 @@
 /* Add your custom extension styling here */
-.weatherWidget {
-   padding: 8px 8px 10px 20px;
-   spacing: 6px
+.extensionBox {
+   font-style: normal;
+}
+.notificationBox{
+   border: width 1px; 
+   border-color:grey;
+   border-radius: 5px;
+   background-color: grey;
+   
+   margin: 5px;
+   width: 500px;
+   height: 50px;
+   padding: 5px;
+}
+.weatherWidget{
+   border: width 1px; 
+   border-color:grey;
+   border-radius: 5px;
+   background-color: royalblue;
+   margin: 5px;
+   max-width: 500px;
+   height: 100px;
+   padding: 5px;
+}
+.weatherWidgetInfo{
+   border: width 1px; 
+   /*border-color:grey;*/
+   border-radius: 5px;
+   background-color:cornflowerblue;
+   margin: 5px;
+   max-width: 370px;
+   height: 100px;
+   padding: 5px;
+   flex-direction: column;
+   color:white;
+   word-break: break-all;
+}
+.weatherWidgetIcon{
+   background-color:cornflowerblue;
+   border-radius: 5px;
+   margin: 5px;
+}
+.weatherTemperatureText{
+   font-size: xx-large;
+}
+.weatherDescriptionText{
+   font-size:small;
+   font-style: oblique;
+}
+.testclass{
+   background-color: blue;
+   height: 100px;
 }

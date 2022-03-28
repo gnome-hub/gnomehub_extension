@@ -20,9 +20,10 @@ let indicator, uuid;
 
 let fname = GLib.getenv("XDG_RUNTIME_DIR") + "/notifications";
 
+/* edit these values to customise the extension */
 var lastCPUTotal;
 var lastCPUUsed;
-
+var numnotifications = 10; // change the max number of notifications to be displayed
 var weatherCurrent = false;
 
 // the following constants should be accesible to the user in a menu interface
@@ -41,27 +42,34 @@ const Dropdown = GObject.registerClass(
         _init() {
             super._init(0.0, 'gnome-hub');
             // log("gnomehub: in indicator")
-
+            let box = new St.BoxLayout({style_class:'extensionBox'});
             // can choose between icon or label
             this._label = new St.Label({
                 'y_align' : Clutter.ActorAlign.CENTER,
                 'text': 'Hub',
                 'style_class': 'label'
             });
+            box.add(this._label);
+            box.add(PopupMenu.arrowIcon(St.Side.BOTTOM));
+            this.actor.add_child(box);
 
             // declare variables
-            let box = new St.BoxLayout({ style_class: 'panel-status-menu-box' });
-            let systemBox = new St.BoxLayout({ style_class: 'panel-status-menu-box' });
-            let notiftitlebox = new St.BoxLayout({ height: 25.0, style_class: 'popup-status-menu-box' });
-            let notifboxes = new Array(10);
-            let notifLabels = new Array(10);
+            // let systemBox = new St.BoxLayout({ style_class: 'panel-status-menu-box' });
+            // let notiftitlebox = new St.BoxLayout({style_class: 'testclass'})
+            let notifboxes = new Array(numnotifications);
+            let notifLabels = new Array(numnotifications);
             // let cpuLabel = new St.Label({text: '----', x_expand: true, x_align: Clutter.ActorAlign.START, y_expand=true});
             let cpuLabel = new St.Label({text: '----', x_expand: true, x_align: Clutter.ActorAlign.START, translation_x: textOffset});
             let memLabel = new St.Label({text: '----', x_expand: true, x_align: Clutter.ActorAlign.START, translation_x: textOffset});
 
-            for (let i = 0; i < 10; i++) {
-                notifboxes[i] = new St.BoxLayout({ height: 25.0, style_class: 'popup-status-menu-box' });
-                notifLabels[i] = new St.Label({text: '----', width: maxWidth, y_expand: true, x_expand: false, x_align: Clutter.ActorAlign.START, translation_x: textOffset});
+            for (let i = 0; i < numnotifications; i++) {
+                notifboxes[i] = new St.BoxLayout({style_class: 'notificationBox' });
+                notifLabels[i] = new St.Label({
+                    text: '----', 
+                    x_expand: true, 
+                    x_align: Clutter.ActorAlign.START, 
+                    y_align: Clutter.ActorAlign.CENTER,
+                    translation_x: 2.0});
             }
 
             // update information
@@ -100,22 +108,20 @@ const Dropdown = GObject.registerClass(
             // notifications section 
             this.menu.addMenuItem( new PopupMenu.PopupSeparatorMenuItem('Notifications'));
 
-            box.add_child(this._label);
             this.add_child(box);
-            this.menu.box.add(notiftitlebox);
+            // this.menu.box.add(notiftitlebox);
             for (let i = 0; i < 10; i++) {
                 notifboxes[i].add(notifLabels[i]);
                 this.menu.box.add(notifboxes[i]);
             }
 
             // add divider between sections
-            this.menu.addMenuItem( new PopupMenu.PopupSeparatorMenuItem('Weather'));
+            this.menu.addMenuItem( new PopupMenu.PopupSeparatorMenuItem('Widgets'));
             /* widget section */
             //let WidgetMenuTitle = new PopupMenu.PopupMenuItem
             /* weather widget --> simplified */
 
             //var weatherWidget = new PopupMenu.PopupSubMenuMenuItem('Weather');
-            var weatherText = "";
             /* TODO get API to constantly update using loop below */
             /*this.timer = Mainloop.timeout_add_seconds(30, Lang.bind(this, function() {
             log("Updating Weather");
@@ -123,17 +129,50 @@ const Dropdown = GObject.registerClass(
             return true;
             }));
             */
-
-            try {
+            try{
                 returnedForecast = _getWeather();
-                weatherText = returnedForecast['name']+":"+returnedForecast['temperature']+returnedForecast['temperatureUnit'];
-                var weatherWidgetE = new PopupMenu.PopupMenuItem(weatherText);
+                let weatherText = returnedForecast['temperature']+"°"+returnedForecast['temperatureUnit'];
+                //var weatherWidgetE = new PopupMenu.PopupMenuItem(weatherText);
+                let weatherWidgetE = new St.BoxLayout({
+                    style_class: 'weatherWidget'
+                });
+                let weatherWidgetInfo = new St.BoxLayout({
+                    style_class: 'weatherWidgetInfo',
+                    vertical: true,
+                })
+                let weatherWidgetLabel = new St.Label({
+                    text: weatherText, 
+                    x_expand: true, 
+                    x_align: Clutter.ActorAlign.START, 
+                    y_align: Clutter.ActorAlign.START,
+                    translation_x: 2.0,
+                    style_class: 'weatherTemperatureText'
+                });
+                let weatherWidgetDescription = new St.Label({
+                    text: returnedForecast['detailedForecast'], 
+                    x_expand: true, 
+                    x_align: Clutter.ActorAlign.START, 
+                    y_align: Clutter.ActorAlign.END,
+                    translation_x: 2.0,
+                    style_class: 'weatherDescriptionText',
+                });
+                weatherWidgetInfo.add(weatherWidgetLabel);
+                weatherWidgetInfo.add(weatherWidgetDescription);
+                let weatherWidgetPicture = new St.Icon({
+                    style_class: 'weatherWidgetIcon',
+                    icon_size: 90
+                });
+                let url = returnedForecast['icon'];
+                let gicon = Gio.icon_new_for_string(url);
+                weatherWidgetPicture.set_gicon(gicon);
+                weatherWidgetE.add(weatherWidgetInfo);
+                weatherWidgetE.add(weatherWidgetPicture);
 
-            /*for(var weatherIndex = 0; weatherIndex < 5; weatherIndex++){
-            var weatherText = new PopupMenu.PopupMenuItem('Forecast for ' + returnedForecast[weatherIndex]['name'] + ' in South Bend, IN:\n' + returnedForecast[weatherIndex]['detailedForecast']);
-            weatherWidget.menu.addMenuItem(weatherText);
-            }*/
-            this.menu.addMenuItem(weatherWidgetE);
+                /*for(var weatherIndex = 0; weatherIndex < 5; weatherIndex++){
+                var weatherText = new PopupMenu.PopupMenuItem('Forecast for ' + returnedForecast[weatherIndex]['name'] + ' in South Bend, IN:\n' + returnedForecast[weatherIndex]['detailedForecast']);
+                weatherWidget.menu.addMenuItem(weatherText);
+                }*/
+                this.menu.box.add(weatherWidgetE);
             }
             catch (e) {
                 log("error loading weather for weather widget")
@@ -452,6 +491,7 @@ function _getWeather() {
             "temperature": response["properties"]["periods"][index]["temperature"],
             "detailedForecast": response["properties"]["periods"][index]["detailedForecast"],
             "temperatureUnit": response["properties"]["periods"][index]["temperatureUnit"],
+            "icon": response["properties"]["periods"][index]["icon"],
         });
     }
     // log("forecast:", JSON.stringify(forecast));
