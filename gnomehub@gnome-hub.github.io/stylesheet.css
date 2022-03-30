@@ -59,7 +59,7 @@
    background-color: grey;
    margin: 5px;
    max-width: 500px;
-   height: 100px;
+   height: 100%;
    padding: 5px;
 }
 .textBox:focus{
