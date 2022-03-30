@@ -98,10 +98,10 @@ const Dropdown = GObject.registerClass(
                 }
 
                 let cpuUsage = getCurrentCPUUsage();
-                cpuLabel.set_text("CPU:\t"+cpuUsage)
+                cpuLabel.set_text("CPU:\t"+cpuUsage+"%")
                 
                 let memUsage = getCurrentMemoryUsage();
-                memLabel.set_text("MEM:\t"+memUsage)
+                memLabel.set_text("MEM:\t"+memUsage+"%")
             }
 
             // actually add it to the menu bar
@@ -271,7 +271,7 @@ const getCurrentCPUUsage = () => {
     } catch (e) {
         logError(e);
     }
-    return currentCPUUsage;
+    return parseInt(currentCPUUsage*100);
 }
 
 // TODO: return this as a nice percent string instead of a decimal
@@ -328,7 +328,7 @@ const getCurrentMemoryUsage = () => {
     } catch (e) {
         logError(e);
     }
-    return currentMemoryUsage;
+    return parseInt(currentMemoryUsage*100);
 }
 
 function updateMessageFile() {
@@ -494,8 +494,6 @@ function _getWeather() {
             "icon": response["properties"]["periods"][index]["icon"],
         });
     }
-    // log("forecast:", JSON.stringify(forecast));
-    
     return(forecast[0]);
 }
 
