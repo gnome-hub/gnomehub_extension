@@ -179,6 +179,18 @@ const Dropdown = GObject.registerClass(
             }
             /* end of weather widget */
 
+	    let clipboardWidget = new St.BoxLayout({
+                style_class: 'clipboardWidget'
+            });
+	    let textBox = new St.Entry({
+		style_class: 'textBox',
+		can_focus: true,
+		track_hover: true,
+		x_expand: true,
+	    });
+	    clipboardWidget.add(textBox);
+	    this.menu.box.add(clipboardWidget);
+
             /* end of widget section */
             // add divider between sections
             this.menu.addMenuItem( new PopupMenu.PopupSeparatorMenuItem(''));
