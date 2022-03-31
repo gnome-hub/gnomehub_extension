@@ -36,6 +36,12 @@ const textOffset = 20.0;
 //                     2 = dropdown menu style // unimplemented
 const notificationMode = 1;
 
+// enable or disable sections
+const showNotifications = 1;
+const showWeather = 1;
+const showClipboard = 1;
+const showSystemStats = 1;
+
 
 const Dropdown = GObject.registerClass(
     class Dropdown extends PanelMenu.Button {
@@ -106,13 +112,15 @@ const Dropdown = GObject.registerClass(
 
             // actually add it to the menu bar
             // notifications section 
-            this.menu.addMenuItem( new PopupMenu.PopupSeparatorMenuItem('Notifications'));
+            if (showNotifications == 1) {
+                this.menu.addMenuItem( new PopupMenu.PopupSeparatorMenuItem('Notifications'));
 
-            this.add_child(box);
-            // this.menu.box.add(notiftitlebox);
-            for (let i = 0; i < 10; i++) {
-                notifboxes[i].add(notifLabels[i]);
-                this.menu.box.add(notifboxes[i]);
+                this.add_child(box);
+                // this.menu.box.add(notiftitlebox);
+                for (let i = 0; i < 10; i++) {
+                    notifboxes[i].add(notifLabels[i]);
+                    this.menu.box.add(notifboxes[i]);
+                }
             }
 
             // add divider between sections
@@ -129,84 +137,90 @@ const Dropdown = GObject.registerClass(
             return true;
             }));
             */
-            try{
-                returnedForecast = _getWeather();
-                let weatherCelcius = parseInt((returnedForecast['temperature']-32)*5/9);
-                let weatherText = returnedForecast['temperature']+"°"+returnedForecast['temperatureUnit']+"/"+weatherCelcius+"°C";
-                //var weatherWidgetE = new PopupMenu.PopupMenuItem(weatherText);
-                let weatherWidgetE = new St.BoxLayout({
-                    style_class: 'weatherWidget'
-                });
-                let weatherWidgetInfo = new St.BoxLayout({
-                    style_class: 'weatherWidgetInfo',
-                    vertical: true,
-                })
-                let weatherWidgetLabel = new St.Label({
-                    text: weatherText, 
-                    x_expand: true, 
-                    x_align: Clutter.ActorAlign.START, 
-                    y_align: Clutter.ActorAlign.START,
-                    translation_x: 2.0,
-                    style_class: 'weatherTemperatureText'
-                });
-                let weatherWidgetDescription = new St.Label({
-                    text: returnedForecast['detailedForecast'], 
-                    x_expand: true, 
-                    x_align: Clutter.ActorAlign.START, 
-                    y_align: Clutter.ActorAlign.END,
-                    translation_x: 2.0,
-                    style_class: 'weatherDescriptionText',
-                });
-                weatherWidgetInfo.add(weatherWidgetLabel);
-                weatherWidgetInfo.add(weatherWidgetDescription);
-                let weatherWidgetPicture = new St.Icon({
-                    style_class: 'weatherWidgetIcon',
-                    icon_size: 90
-                });
-                let url = returnedForecast['icon'];
-                let gicon = Gio.icon_new_for_string(url);
-                weatherWidgetPicture.set_gicon(gicon);
-                weatherWidgetE.add(weatherWidgetInfo);
-                weatherWidgetE.add(weatherWidgetPicture);
+    
+            if (showWeather == 1) {
+                try{
+                    returnedForecast = _getWeather();
+                    let weatherCelcius = parseInt((returnedForecast['temperature']-32)*5/9);
+                    let weatherText = returnedForecast['temperature']+"°"+returnedForecast['temperatureUnit']+"/"+weatherCelcius+"°C";
+                    //let weatherText = returnedForecast['temperature']+"°"+returnedForecast['temperatureUnit'];
+                    //var weatherWidgetE = new PopupMenu.PopupMenuItem(weatherText);
+                    let weatherWidgetE = new St.BoxLayout({
+                        style_class: 'weatherWidget'
+                    });
+                    let weatherWidgetInfo = new St.BoxLayout({
+                        style_class: 'weatherWidgetInfo',
+                        vertical: true,
+                    })
+                    let weatherWidgetLabel = new St.Label({
+                        text: weatherText, 
+                        x_expand: true, 
+                        x_align: Clutter.ActorAlign.START, 
+                        y_align: Clutter.ActorAlign.START,
+                        translation_x: 2.0,
+                        style_class: 'weatherTemperatureText'
+                    });
+                    let weatherWidgetDescription = new St.Label({
+                        text: returnedForecast['detailedForecast'], 
+                        x_expand: true, 
+                        x_align: Clutter.ActorAlign.START, 
+                        y_align: Clutter.ActorAlign.END,
+                        translation_x: 2.0,
+                        style_class: 'weatherDescriptionText',
+                    });
+                    weatherWidgetInfo.add(weatherWidgetLabel);
+                    weatherWidgetInfo.add(weatherWidgetDescription);
+                    let weatherWidgetPicture = new St.Icon({
+                        style_class: 'weatherWidgetIcon',
+                        icon_size: 90
+                    });
+                    let url = returnedForecast['icon'];
+                    let gicon = Gio.icon_new_for_string(url);
+                    weatherWidgetPicture.set_gicon(gicon);
+                    weatherWidgetE.add(weatherWidgetInfo);
+                    weatherWidgetE.add(weatherWidgetPicture);
 
-                /*for(var weatherIndex = 0; weatherIndex < 5; weatherIndex++){
-                var weatherText = new PopupMenu.PopupMenuItem('Forecast for ' + returnedForecast[weatherIndex]['name'] + ' in South Bend, IN:\n' + returnedForecast[weatherIndex]['detailedForecast']);
-                weatherWidget.menu.addMenuItem(weatherText);
-                }*/
-                this.menu.box.add(weatherWidgetE);
+                    /*for(var weatherIndex = 0; weatherIndex < 5; weatherIndex++){
+                    var weatherText = new PopupMenu.PopupMenuItem('Forecast for ' + returnedForecast[weatherIndex]['name'] + ' in South Bend, IN:\n' + returnedForecast[weatherIndex]['detailedForecast']);
+                    weatherWidget.menu.addMenuItem(weatherText);
+                    }*/
+                    this.menu.box.add(weatherWidgetE);
+                }
+                catch (e) {
+                    log("error loading weather for weather widget")
+                }
+                /* end of weather widget */
+
+                if (showClipboard == 1) {
+                    let clipboardWidget = new St.BoxLayout({
+                            style_class: 'clipboardWidget'
+                        });
+                    let textBox = new St.Entry({
+                    style_class: 'textBox',
+                    can_focus: true,
+                    track_hover: true,
+                    x_expand: true,
+                    });
+                    clipboardWidget.add(textBox);
+                    this.menu.box.add(clipboardWidget);
+                }
             }
-            catch (e) {
-                log("error loading weather for weather widget")
+            
+            if (showSystemStats == 1) {
+                // add divider before numbers
+                this.menu.addMenuItem( new PopupMenu.PopupSeparatorMenuItem(''));
+                // cpu and memory section
+                this.menu.box.add(cpuLabel);
+                this.menu.box.add(memLabel);
+
             }
-            /* end of weather widget */
 
-	    let clipboardWidget = new St.BoxLayout({
-                style_class: 'clipboardWidget'
-            });
-	    let textBox = new St.Entry({
-		style_class: 'textBox',
-		can_focus: true,
-		track_hover: true,
-		x_expand: true,
-	    });
-	    clipboardWidget.add(textBox);
-	    this.menu.box.add(clipboardWidget);
-
-            /* end of widget section */
-            // add divider between sections
-            this.menu.addMenuItem( new PopupMenu.PopupSeparatorMenuItem(''));
-	    
             // settings section
             // let settingsMenuItem = new PopupMenu.PopupMenuItem('Settings');
             // settingsMenuItem.connect('activate', () => {
             //     ExtensionUtils.openPrefs();
             // });
             // this.menu.addMenuItem(settingsMenuItem); 
-            
-            // cpu and memory section
-            this.menu.box.add(cpuLabel);
-            this.menu.box.add(memLabel);
-
             
             // this._eventLoop = Mainloop.timeout_add(1000, Lang.bind(this, function (){
             //     updateDisplay();
