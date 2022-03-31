@@ -137,10 +137,13 @@ const Dropdown = GObject.registerClass(
             return true;
             }));
             */
+    
             if (showWeather == 1) {
                 try{
                     returnedForecast = _getWeather();
-                    let weatherText = returnedForecast['temperature']+"°"+returnedForecast['temperatureUnit'];
+                    let weatherCelcius = parseInt((returnedForecast['temperature']-32)*5/9);
+                    let weatherText = returnedForecast['temperature']+"°"+returnedForecast['temperatureUnit']+"/"+weatherCelcius+"°C";
+                    //let weatherText = returnedForecast['temperature']+"°"+returnedForecast['temperatureUnit'];
                     //var weatherWidgetE = new PopupMenu.PopupMenuItem(weatherText);
                     let weatherWidgetE = new St.BoxLayout({
                         style_class: 'weatherWidget'
