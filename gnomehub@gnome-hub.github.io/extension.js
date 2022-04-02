@@ -10,7 +10,7 @@ const MessageTray = imports.ui.messageTray;
 const Mainloop = imports.mainloop;
 const ByteArray = imports.byteArray;
 
-const Tweener = imports.ui.tweener;
+const Tweener = imports.tweener.tweener;
 
 let text, button;
 let originalCountUpdated, originalDestroy;
