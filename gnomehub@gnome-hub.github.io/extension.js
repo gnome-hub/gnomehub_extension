@@ -78,37 +78,6 @@ const Dropdown = GObject.registerClass(
                     translation_x: 2.0});
             }
 
-            // update information
-            function updateDisplay() {
-                let notifications = [];
-                if (notificationMode == 0) {
-                    notifications = getNotifications();
-                }
-                else if (notificationMode == 1) {
-                    notifications = getGroupedNotifications();
-                }
-
-                // log(notifications.length)
-                let i = 0;
-                while (i < 10 && i < notifications.length) {
-                    notifLabels[i].set_text(notifications[i]);
-                    i = i + 1;
-                }
-                for (let i = 0; i < 10; i++) {
-                    if (i < notifications.length) {
-                        notifLabels[i].set_text(notifications[i])
-                    }
-                    else {
-                        notifLabels[i].set_text("----")
-                    }
-                }
-
-                let cpuUsage = getCurrentCPUUsage();
-                cpuLabel.set_text("CPU:\t"+cpuUsage+"%")
-                
-                let memUsage = getCurrentMemoryUsage();
-                memLabel.set_text("MEM:\t"+memUsage+"%")
-            }
 
             // actually add it to the menu bar
             // notifications section 
@@ -136,8 +105,11 @@ const Dropdown = GObject.registerClass(
 
             return true;
             }));
+
             */
-    
+
+            let weatherWidgetLabel = null;
+
             if (showWeather == 1) {
                 try{
                     returnedForecast = _getWeather();
@@ -146,7 +118,7 @@ const Dropdown = GObject.registerClass(
                     //let weatherText = returnedForecast['temperature']+"°"+returnedForecast['temperatureUnit'];
                     //var weatherWidgetE = new PopupMenu.PopupMenuItem(weatherText);
                     let weatherWidgetE = new St.BoxLayout({
-                        style_class: 'weatherWidget'
+                        style_class: 'weatherWidget' 
                     });
                     let weatherWidgetInfo = new St.BoxLayout({
                         style_class: 'weatherWidgetInfo',
@@ -154,6 +126,7 @@ const Dropdown = GObject.registerClass(
                     })
                     let weatherWidgetLabel = new St.Label({
                         text: weatherText, 
+                        // text: "", 
                         x_expand: true, 
                         x_align: Clutter.ActorAlign.START, 
                         y_align: Clutter.ActorAlign.START,
@@ -162,6 +135,7 @@ const Dropdown = GObject.registerClass(
                     });
                     let weatherWidgetDescription = new St.Label({
                         text: returnedForecast['detailedForecast'], 
+                        // text: "",
                         x_expand: true, 
                         x_align: Clutter.ActorAlign.START, 
                         y_align: Clutter.ActorAlign.END,
@@ -174,16 +148,16 @@ const Dropdown = GObject.registerClass(
                         style_class: 'weatherWidgetIcon',
                         icon_size: 90
                     });
+    
+                    // weatherWidgetLabel.set_text(weatherText);
+                    // weatherWidgetDescription.set_text(weatherDescriptionText);
+
                     let url = returnedForecast['icon'];
                     let gicon = Gio.icon_new_for_string(url);
                     weatherWidgetPicture.set_gicon(gicon);
                     weatherWidgetE.add(weatherWidgetInfo);
                     weatherWidgetE.add(weatherWidgetPicture);
 
-                    /*for(var weatherIndex = 0; weatherIndex < 5; weatherIndex++){
-                    var weatherText = new PopupMenu.PopupMenuItem('Forecast for ' + returnedForecast[weatherIndex]['name'] + ' in South Bend, IN:\n' + returnedForecast[weatherIndex]['detailedForecast']);
-                    weatherWidget.menu.addMenuItem(weatherText);
-                    }*/
                     this.menu.box.add(weatherWidgetE);
                 }
                 catch (e) {
@@ -226,6 +200,53 @@ const Dropdown = GObject.registerClass(
             //     updateDisplay();
             //     return true;
             // }))
+
+            // update information
+            function updateDisplay() {
+                if (showNotifications == 1) {
+                    let notifications = [];
+                    if (notificationMode == 0) {
+                        notifications = getNotifications();
+                    }
+                    else if (notificationMode == 1) {
+                        notifications = getGroupedNotifications();
+                    }
+
+                    // log(notifications.length)
+                    let i = 0;
+                    while (i < 10 && i < notifications.length) {
+                        notifLabels[i].set_text(notifications[i]);
+                        i = i + 1;
+                    }
+                    for (let i = 0; i < 10; i++) {
+                        if (i < notifications.length) {
+                            notifLabels[i].set_text(notifications[i])
+                        }
+                        else {
+                            notifLabels[i].set_text("----")
+                        }
+                    }
+                }
+
+                if (showSystemStats == 1) {
+                    let cpuUsage = getCurrentCPUUsage();
+                    cpuLabel.set_text("CPU:\t"+cpuUsage+"%")
+                    
+                    let memUsage = getCurrentMemoryUsage();
+                    memLabel.set_text("MEM:\t"+memUsage+"%")
+                }
+
+                if (showWeather == 1) {
+                    // log("gnomehub: updating weather")
+                    let returnedForecast = _getWeather();
+                    let weatherCelcius = parseInt((returnedForecast['temperature']-32)*5/9);
+                    let weatherText = returnedForecast['temperature']+"°"+returnedForecast['temperatureUnit']+"/"+weatherCelcius+"°C";
+                    if (weatherWidgetLabel) {
+                        weatherWidgetLabel.set_text(weatherText);
+                    }
+                }
+            }
+
             this._eventLoop = Mainloop.timeout_add(millisRefreshInterval, () => {
                 updateDisplay();
                 return true;
@@ -386,7 +407,7 @@ function updateMessageFile() {
     } catch (e) {
         logError(e);
     }
-    log(contents)
+    // log(contents)
     
     
     // write things to file if not already written
@@ -404,7 +425,7 @@ function updateMessageFile() {
             // let data = urg + " " + notif.title + " — " + notif.bannerBodyText;
             let data = notif.title + " — " + notif.bannerBodyText;
             data = data.replace("\n"," ");
-            log("READ: "+data)
+            // log("READ: "+data)
             if (contents.includes(data)) {
                 continue;
             }
