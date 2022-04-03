@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.gnomehub"
+    path="/org/gnome/shell/extensions/gnomehub/">
+    
+    <key type="b" name="shownotifications">
+      <default>true</default>
+      <summary>showNotifications</summary>
+      <description>enable or disable</description>
+    </key>
+
+    <key type="b" name="showweather">
+      <default>true</default>
+      <summary>showWeather</summary>
+      <description>enable or disable</description>
+    </key>
+
+    <key type="b" name="showclipboard">
+      <default>true</default>
+      <summary>showClipboard</summary>
+      <description>enable or disable</description>
+    </key>
+
+    <key type="b" name="showsystemstats">
+      <default>true</default>
+      <summary>showSystemStats</summary>
+      <description>enable or disable</description>
+    </key>
+    
+  </schema>
+  
+</schemalist>

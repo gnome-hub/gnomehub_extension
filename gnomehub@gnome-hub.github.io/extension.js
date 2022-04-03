@@ -533,12 +533,30 @@ function _countUpdated() {
     return res;
 }
 
+function getSettings() {
+  let GioSSS = Gio.SettingsSchemaSource;
+  let schemaSource = GioSSS.new_from_directory(
+    Me.dir.get_child("schemas").get_path(),
+    GioSSS.get_default(),
+    false
+  );
+  let schemaObj = schemaSource.lookup(
+    'org.gnome.shell.extensions.gnomehub', true);
+  if (!schemaObj) {
+    throw new Error('cannot find schemas');
+  }
+  return new Gio.Settings({ settings_schema : schemaObj });
+}
+
+
 class Extension {
     constructor(uuid) {
         this._uuid = uuid;
     }
 
     enable() {
+        let settings = getSettings();
+        log( "my boolean:" + settings.get_boolean('shownotifications').toString() );
         this.indicator = null;
 
         let file = Gio.file_new_for_path(fname);
