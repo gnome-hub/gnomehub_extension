@@ -1,7 +1,11 @@
 const GObject = imports.gi.GObject;
 const Gtk = imports.gi.Gtk;
 const Gio = imports.gi.Gio;
-// const Me = 
+const ExtensionUtils = imports.misc.extensionUtils;
+
+const SETTING_SCHEMA = 'org.gnome.shell.extensions.gnomehub';
+const settings = ExtensionUtils.getSettings(SETTING_SCHEMA);
+
 
 function init() {
 
@@ -35,7 +39,7 @@ const gnomeHubPrefsWidget = new GObject.Class({
     Extends : Gtk.Box,
 
     _init : function (params) {
-        let settings = getSettings(); 
+        // let settings = getSettings(); 
 
         this.parent(params);
         this.margin = 20;
@@ -47,6 +51,7 @@ const gnomeHubPrefsWidget = new GObject.Class({
             label : "show notifications"
         });
         let notificationSwitch = new Gtk.ToggleButton();
+        notificationSwitch.set_active(settings.get_boolean('shownotifications'))
         
         notificationSwitch.connect("toggled", function (w) {
             log( w.get_active() )
@@ -65,9 +70,11 @@ const gnomeHubPrefsWidget = new GObject.Class({
             label : "show weather"
         });
         let weatherSwitch = new Gtk.ToggleButton();
+        weatherSwitch.set_active(settings.get_boolean('showweather'))
         
         weatherSwitch.connect("toggled", function (w) {
             log( w.get_active() )
+            settings.set_boolean('showweather', w.get_active());
         })
 
         let weatherBox = new Gtk.Box();
@@ -82,9 +89,11 @@ const gnomeHubPrefsWidget = new GObject.Class({
             label : "show clipboard"
         });
         let clipboardSwitch = new Gtk.ToggleButton();
+        clipboardSwitch.set_active(settings.get_boolean('showclipboard'))
         
         clipboardSwitch.connect("toggled", function (w) {
             log( w.get_active() )
+            settings.set_boolean('showclipboard', w.get_active());
         })
 
         let clipBox = new Gtk.Box();
@@ -96,12 +105,14 @@ const gnomeHubPrefsWidget = new GObject.Class({
 
         // for system stats
         let sysLabel = new Gtk.Label({
-            label : "show notifications"
+            label : "show system stats"
         });
         let sysSwitch = new Gtk.ToggleButton();
+        sysSwitch.set_active(settings.get_boolean('showsystemstats'))
         
         sysSwitch.connect("toggled", function (w) {
             log( w.get_active() )
+            settings.set_boolean('showsystemstats', w.get_active());
         })
 
         let sysBox = new Gtk.Box();

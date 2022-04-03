@@ -37,10 +37,10 @@ const textOffset = 20.0;
 const notificationMode = 1;
 
 // enable or disable sections
-const showNotifications = 1;
-const showWeather = 1;
-const showClipboard = 1;
-const showSystemStats = 1;
+var showNotifications = true;
+var showWeather = true;
+var showClipboard = true;
+var showSystemStats = true;
 
 
 const Indicator = GObject.registerClass(
@@ -112,7 +112,7 @@ const Indicator = GObject.registerClass(
 
             // actually add it to the menu bar
             // notifications section 
-            if (showNotifications == 1) {
+            if (showNotifications) {
                 this.menu.addMenuItem( new PopupMenu.PopupSeparatorMenuItem('Notifications'));
 
                 this.add_child(box);
@@ -138,7 +138,7 @@ const Indicator = GObject.registerClass(
             }));
             */
     
-            if (showWeather == 1) {
+            if (showWeather) {
                 try{
                     returnedForecast = _getWeather();
                     let weatherCelcius = parseInt((returnedForecast['temperature']-32)*5/9);
@@ -191,7 +191,7 @@ const Indicator = GObject.registerClass(
                 }
                 /* end of weather widget */
 
-                if (showClipboard == 1) {
+                if (showClipboard) {
                     let clipboardWidget = new St.BoxLayout({
                             style_class: 'clipboardWidget'
                         });
@@ -556,7 +556,14 @@ class Extension {
 
     enable() {
         let settings = getSettings();
-        log( "my boolean:" + settings.get_boolean('shownotifications').toString() );
+        showNotifications = settings.get_boolean('shownotifications');
+        showWeather = settings.get_boolean('showweather');
+        showClipboard = settings.get_boolean('showclipboard');
+        showSystemStats = settings.get_boolean('showsystemstats');
+        // log( "gnomehub:notifs:" + settings.get_boolean('shownotifications').toString() );
+        // log( "gnomehub:weather:" + settings.get_boolean('showweather').toString() );
+        // log( "gnomehub:clipboard:" + settings.get_boolean('showclipboard').toString() );
+        // log( "gnomehub:system:" + settings.get_boolean('showsystemstats').toString() );
         this.indicator = null;
 
         let file = Gio.file_new_for_path(fname);
