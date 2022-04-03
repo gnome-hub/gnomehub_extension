@@ -47,10 +47,11 @@ const gnomeHubPrefsWidget = new GObject.Class({
         this.set_orientation(Gtk.Orientation.VERTICAL);
         
         // for notifications
-        let notifLabel = new Gtk.Label({
-            label : "show notifications"
-        });
-        let notificationSwitch = new Gtk.ToggleButton();
+        // let notifLabel = new Gtk.Label({
+        //     label : "show notifications"
+        // });
+        // let notificationSwitch = new Gtk.Switch();
+        let notificationSwitch = Gtk.ToggleButton.new_with_label("show notifications");
         notificationSwitch.set_active(settings.get_boolean('shownotifications'))
         
         notificationSwitch.connect("toggled", function (w) {
@@ -58,18 +59,20 @@ const gnomeHubPrefsWidget = new GObject.Class({
             settings.set_boolean('shownotifications', w.get_active());
         })
 
-        let notifBox = new Gtk.Box();
-        notifBox.set_orientation(Gtk.Orientation.HORIZONTAL);
-        notifBox.pack_start(notifLabel, false, false, 0);
-        notifBox.pack_end(notificationSwitch, false, false, 0);
-        this.add(notifBox);
+        // let notifBox = new Gtk.Box();
+        // notifBox.set_orientation(Gtk.Orientation.HORIZONTAL);
+        // notifBox.pack_start(notifLabel, false, false, 0);
+        // notifBox.pack_end(notificationSwitch, false, false, 0);
+        // this.add(notifBox);
+        this.add(notificationSwitch)
 
 
         // for weather
-        let weatherLabel = new Gtk.Label({
-            label : "show weather"
-        });
-        let weatherSwitch = new Gtk.ToggleButton();
+        // let weatherLabel = new Gtk.Label({
+        //     label : "show weather"
+        // });
+        // let weatherSwitch = new Gtk.ToggleButton();
+        let weatherSwitch = Gtk.ToggleButton.new_with_label("show weather")
         weatherSwitch.set_active(settings.get_boolean('showweather'))
         
         weatherSwitch.connect("toggled", function (w) {
@@ -77,18 +80,20 @@ const gnomeHubPrefsWidget = new GObject.Class({
             settings.set_boolean('showweather', w.get_active());
         })
 
-        let weatherBox = new Gtk.Box();
-        weatherBox.set_orientation(Gtk.Orientation.HORIZONTAL);
-        weatherBox.pack_start(weatherLabel, false, false, 0);
-        weatherBox.pack_end(weatherSwitch, false, false, 0);
-        this.add(weatherBox);
+        // let weatherBox = new Gtk.Box();
+        // weatherBox.set_orientation(Gtk.Orientation.HORIZONTAL);
+        // weatherBox.pack_start(weatherLabel, false, false, 0);
+        // weatherBox.pack_end(weatherSwitch, false, false, 0);
+        // this.add(weatherBox);
+        this.add(weatherSwitch)
 
 
         // for clipboard
-        let clipboardLabel = new Gtk.Label({
-            label : "show clipboard"
-        });
-        let clipboardSwitch = new Gtk.ToggleButton();
+        // let clipboardLabel = new Gtk.Label({
+        //     label : "show clipboard"
+        // });
+        // let clipboardSwitch = new Gtk.ToggleButton();
+        let clipboardSwitch = Gtk.ToggleButton.new_with_label("show clipboard");
         clipboardSwitch.set_active(settings.get_boolean('showclipboard'))
         
         clipboardSwitch.connect("toggled", function (w) {
@@ -96,18 +101,20 @@ const gnomeHubPrefsWidget = new GObject.Class({
             settings.set_boolean('showclipboard', w.get_active());
         })
 
-        let clipBox = new Gtk.Box();
-        clipBox.set_orientation(Gtk.Orientation.HORIZONTAL);
-        clipBox.pack_start(clipboardLabel, false, false, 0);
-        clipBox.pack_end(clipboardSwitch, false, false, 0);
-        this.add(clipBox);
+        // let clipBox = new Gtk.Box();
+        // clipBox.set_orientation(Gtk.Orientation.HORIZONTAL);
+        // clipBox.pack_start(clipboardLabel, false, false, 0);
+        // clipBox.pack_end(clipboardSwitch, false, false, 0);
+        // this.add(clipBox);
+        this.add(clipboardSwitch)
 
 
         // for system stats
-        let sysLabel = new Gtk.Label({
-            label : "show system stats"
-        });
-        let sysSwitch = new Gtk.ToggleButton();
+        // let sysLabel = new Gtk.Label({
+        //     label : "show system stats"
+        // });
+        // let sysSwitch = new Gtk.ToggleButton();
+        let sysSwitch = Gtk.ToggleButton.new_with_label("show system stats");
         sysSwitch.set_active(settings.get_boolean('showsystemstats'))
         
         sysSwitch.connect("toggled", function (w) {
@@ -115,11 +122,12 @@ const gnomeHubPrefsWidget = new GObject.Class({
             settings.set_boolean('showsystemstats', w.get_active());
         })
 
-        let sysBox = new Gtk.Box();
-        sysBox.set_orientation(Gtk.Orientation.HORIZONTAL);
-        sysBox.pack_start(sysLabel, false, false, 0);
-        sysBox.pack_end(sysSwitch, false, false, 0);
-        this.add(sysBox);
+        // let sysBox = new Gtk.Box();
+        // sysBox.set_orientation(Gtk.Orientation.HORIZONTAL);
+        // sysBox.pack_start(sysLabel, false, false, 0);
+        // sysBox.pack_end(sysSwitch, false, false, 0);
+        // this.add(sysBox);
+        this.add(sysSwitch)
     }
 
 })
