@@ -43,8 +43,8 @@ const showClipboard = 1;
 const showSystemStats = 1;
 
 
-const Dropdown = GObject.registerClass(
-    class Dropdown extends PanelMenu.Button {
+const Indicator = GObject.registerClass(
+    class Indicator extends PanelMenu.Button {
         _init() {
             super._init(0.0, 'gnome-hub');
             // log("gnomehub: in indicator")
@@ -549,7 +549,7 @@ class Extension {
         }
         file.create(Gio.FileCreateFlags.NONE, null);
 
-        this.indicator = new Dropdown();
+        this.indicator = new Indicator();
         Main.panel.addToStatusArea(this.uuid, this.indicator, 0, 'right');
 
         originalCountUpdated = MessageTray.Source.prototype.countUpdated;
