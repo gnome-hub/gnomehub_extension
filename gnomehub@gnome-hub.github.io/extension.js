@@ -386,7 +386,7 @@ function updateMessageFile() {
     } catch (e) {
         logError(e);
     }
-    log(contents)
+    // log(contents)
     
     
     // write things to file if not already written
@@ -404,7 +404,7 @@ function updateMessageFile() {
             // let data = urg + " " + notif.title + " — " + notif.bannerBodyText;
             let data = notif.title + " — " + notif.bannerBodyText;
             data = data.replace("\n"," ");
-            log("READ: "+data)
+            // log("READ: "+data)
             if (contents.includes(data)) {
                 continue;
             }
@@ -554,13 +554,12 @@ class Extension {
 
         originalCountUpdated = MessageTray.Source.prototype.countUpdated;
         MessageTray.Source.prototype.countUpdated = _countUpdated;
-        // this.timeout = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT_IDLE, 5, this._refresh_monitor.bind(this)); // REENABLE THIS FOR DEBUG
     }
 
     disable() {
         MessageTray.Source.prototype.countUpdated = originalCountUpdated;
-        // this.indicator.destroy();
-        Main.panel._rightBox.remove_child(button);
+        Main.panel._rightBox.remove_child(this.indicator);
+        this.indicator.destroy();
     }
 
     // _refresh_monitor() {
