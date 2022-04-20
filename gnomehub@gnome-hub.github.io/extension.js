@@ -479,7 +479,9 @@ function getGroupedNotifications() {
     }
 
     for (var key in notifGroups) {
-        // log("gnomehub most recent "+key+" notification: "+notifGroups[key][0])
+        if(key.includes(".mp3")) // This is to ensure we don't display music in notifications
+            continue;
+        //log("gnomehub most recent "+key+" notification: "+notifGroups[key][0])
         if (notifGroups[key][0]) {
             notifs.unshift(notifGroups[key][0])
         } 
